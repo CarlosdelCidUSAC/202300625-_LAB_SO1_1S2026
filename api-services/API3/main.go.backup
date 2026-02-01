@@ -10,16 +10,15 @@ import (
 
 const (
 	CARNET     = "202300625"
-	CURRENT_VM = "VM1"
-	API_NAME   = "API1"
-	PORT       = ":8081" // Puerto correcto
+	CURRENT_VM = "VM2"
+	API_NAME   = "API3"
+	PORT       = ":8083"
 
-	// CORRECCIÓN AQUÍ:
-	URL_API2 = "http://localhost:8082/health"
-	URL_API3 = "http://192.168.122.20:8083/health"
+	URL_API1 = "http://192.168.122.10:8081/health"
+	URL_API2 = "http://192.168.122.10:8082/health"
 )
 
-// Estructura para respuesta /health
+// Estructura de respuesta Health
 type HealthResponse struct {
 	Status    string `json:"status"`
 	Message   string `json:"message"`
@@ -28,7 +27,7 @@ type HealthResponse struct {
 	Carnet    string `json:"carnet"`
 }
 
-// Estructura para respuesta de llamadas
+// Estructura de respuesta Call
 type CallResponse struct {
 	ApiName    string `json:"apiname"`
 	Message    string `json:"message"`
@@ -37,18 +36,24 @@ type CallResponse struct {
 }
 
 func main() {
+	// 1. Endpoint de Salud
 	http.HandleFunc("/health", healthHandler)
-	// Definición de endpoints dinámicos
-	http.HandleFunc(fmt.Sprintf("/api1/%s/call-api2", CARNET), callApi2Handler)
-	http.HandleFunc(fmt.Sprintf("/api1/%s/call-api3", CARNET), callApi3Handler)
 
-	fmt.Printf("Iniciando %s en el puerto %s...\n", API_NAME, PORT)
-	if err := http.ListenAndServe("0.0.0.0"+PORT, nil); err != nil {
+	// 2. Endpoints de llamadas a otras APIs
+	// GET /api3/#CARNET/call-api1
+	http.HandleFunc(fmt.Sprintf("/api3/%s/call-api1", CARNET), callApi1Handler)
+	// GET /api3/#CARNET/call-api2
+	http.HandleFunc(fmt.Sprintf("/api3/%s/call-api2", CARNET), callApi2Handler)
+
+	fmt.Printf("Iniciando %s en la %s puerto %s...\n", API_NAME, CURRENT_VM, PORT)
+	fmt.Printf("Apuntando a VM1 en: 192.168.122.10\n")
+
+	if err := http.ListenAndServe(PORT, nil); err != nil {
 		fmt.Printf("Error iniciando servidor: %s\n", err)
 	}
 }
 
-// Handler para GET /health
+// Handler: /health
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -57,7 +62,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := HealthResponse{
 		Status:    "UP",
-		Message:   "API1 is Ready",
+		Message:   "API3 is Ready",
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 		VM:        CURRENT_VM,
 		Carnet:    CARNET,
@@ -67,24 +72,26 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Handler para llamar a API 2
+// Handler: Call API 1
+func callApi1Handler(w http.ResponseWriter, r *http.Request) {
+	// Llama a API1 ubicada en VM1 (puerto 8081)
+	handleRemoteCall(w, "API1", "VM1", URL_API1)
+}
+
+// Handler: Call API 2
 func callApi2Handler(w http.ResponseWriter, r *http.Request) {
+	// Llama a API2 ubicada en VM1 (puerto 8082)
 	handleRemoteCall(w, "API2", "VM1", URL_API2)
 }
 
-// Handler para llamar a API 3
-func callApi3Handler(w http.ResponseWriter, r *http.Request) {
-	handleRemoteCall(w, "API3", "VM2", URL_API3)
-}
-
-// Función auxiliar para realizar la petición HTTP a la otra API
+// Lógica reutilizable para hacer peticiones HTTP
 func handleRemoteCall(w http.ResponseWriter, targetApiName, targetVM, targetURL string) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Realizar la petición GET al endpoint /health de la API destino
+	// Realizar petición GET
 	resp, err := http.Get(targetURL)
 
-	// Caso de Error o Falla de Conexión
+	// Manejo de errores de conexión
 	if err != nil || resp.StatusCode != http.StatusOK {
 		failResponse := CallResponse{
 			ApiName:    targetApiName,
@@ -97,13 +104,13 @@ func handleRemoteCall(w http.ResponseWriter, targetApiName, targetVM, targetURL 
 	}
 	defer resp.Body.Close()
 
-	// Leer respuesta para asegurar que el status sea UP
+	// Leer y decodificar respuesta
 	body, _ := ioutil.ReadAll(resp.Body)
 	var healthResp HealthResponse
 	json.Unmarshal(body, &healthResp)
 
+	// Verificar si el estado es UP
 	if healthResp.Status == "UP" {
-		// Caso de Éxito
 		successResponse := CallResponse{
 			ApiName:    targetApiName,
 			Message:    fmt.Sprintf("The %s located on the %s is working", targetApiName, targetVM),
@@ -112,7 +119,6 @@ func handleRemoteCall(w http.ResponseWriter, targetApiName, targetVM, targetURL 
 		}
 		json.NewEncoder(w).Encode(successResponse)
 	} else {
-		// Si responde pero el status no es UP
 		failResponse := CallResponse{
 			ApiName:    targetApiName,
 			Message:    fmt.Sprintf("ERROR: The %s located on the %s is not working", targetApiName, targetVM),

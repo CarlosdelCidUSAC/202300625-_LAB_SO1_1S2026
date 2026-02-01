@@ -8,16 +8,15 @@ import (
 	"time"
 )
 
-// CONSTANTES A CONFIGURAR POR EL ESTUDIANTE
 const (
-	CARNET     = "202300625" // Reemplazar con tu carnet real
+	CARNET     = "202300625"
 	CURRENT_VM = "VM1"
 	API_NAME   = "API2"
-	PORT       = ":8082"
+	PORT       = ":8082" // Puerto correcto
 
-	// Direcciones de las otras APIs
+	// CORRECCIÓN AQUÍ:
 	URL_API1 = "http://localhost:8081/health"
-	URL_API3 = "http://192.168.122.22:8080/health"
+	URL_API3 = "http://192.168.122.20:8083/health"
 )
 
 type HealthResponse struct {
@@ -42,7 +41,7 @@ func main() {
 	http.HandleFunc(fmt.Sprintf("/api2/%s/call-api3", CARNET), callApi3Handler)
 
 	fmt.Printf("Iniciando %s en el puerto %s...\n", API_NAME, PORT)
-	if err := http.ListenAndServe(PORT, nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0"+PORT, nil); err != nil {
 		fmt.Printf("Error iniciando servidor: %s\n", err)
 	}
 }

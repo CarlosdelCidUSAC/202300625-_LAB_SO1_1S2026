@@ -1,3 +1,19 @@
+#!/bin/bash
+set -e
+
+USER="carlos"
+VM2_IP="192.168.122.20"
+IMAGE_DIR="images"
+
+echo "=== RECONSTRUYENDO API3 CON FIX ==="
+
+# 1. Backup del main.go original
+echo "[1/6] Haciendo backup del main.go original..."
+cp api-services/API3/main.go api-services/API3/main.go.backup
+
+# 2. Usar el código corregido
+echo "[2/6] Aplicando código corregido..."
+cat > api-services/API3/main.go << 'GOCODE'
 package main
 
 import (
@@ -51,7 +67,7 @@ func main() {
 	fmt.Printf("[CONFIG] API1=%s\n", URL_API1)
 	fmt.Printf("[CONFIG] API2=%s\n", URL_API2)
 
-	if err := http.ListenAndServe("0.0.0.0"+PORT, nil); err != nil {
+	if err := http.ListenAndServe(PORT, nil); err != nil {
 		fmt.Printf("[ERROR] Servidor falló: %s\n", err)
 	}
 }
@@ -152,3 +168,44 @@ func sendFailResponse(w http.ResponseWriter, targetApiName, targetVM string) {
 	}
 	json.NewEncoder(w).Encode(failResponse)
 }
+GOCODE
+
+# 3. Recompilar
+echo "[3/6] Recompilando API3..."
+env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api-services/API3/api3-bin api-services/API3/main.go
+
+# 4. Rebuild Docker
+echo "[4/6] Reconstruyendo imagen Docker..."
+sudo docker build -t api3-202300625 -f api-services/dockerfiles/Dockerfile --build-arg BIN_PATH=api-services/API3/api3-bin .
+sudo docker save api3-202300625 > $IMAGE_DIR/api3.tar
+
+# 5. Transfer y Deploy
+echo "[5/6] Transfiriendo a VM2..."
+scp $IMAGE_DIR/api3.tar $USER@$VM2_IP:/home/$USER/
+
+echo "[6/6] Desplegando en VM2..."
+ssh -tt $USER@$VM2_IP << 'EOF'
+    sudo ctr images import api3.tar
+    
+    echo "Deteniendo contenedor anterior..."
+    sudo ctr tasks kill -s SIGKILL api3_service 2>/dev/null || true
+    sleep 2
+    sudo ctr containers delete api3_service 2>/dev/null || true
+    
+    echo "Iniciando nuevo contenedor..."
+    sudo ctr run -d --net-host docker.io/library/api3-202300625:latest api3_service
+    
+    sleep 3
+    echo ""
+    echo "Estado de contenedores:"
+    sudo ctr tasks ls
+    
+    echo ""
+    echo "Verificando que API3 responde:"
+    nc -zv localhost 8083 2>&1 || echo "Puerto 8083 no responde aún"
+EOF
+
+echo ""
+echo "=== RECONSTRUCCIÓN COMPLETA ==="
+echo ""
+echo "Ahora ejecuta: scripts/test_workflow.sh"
