@@ -1,0 +1,138 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
+// CONFIGURACIÓN DEL ESTUDIANTE
+const (
+	CARNET     = "202300625"
+	CURRENT_VM = "VM2" //  Esta API vive en la VM2
+	API_NAME   = "API3"
+	PORT       = ":8083"
+
+	// IMPORTANTE: Aquí debes poner la IP de la VM1, donde viven API1 y API2.
+	// No uses "localhost" porque API3 está en una máquina física/virtual distinta.
+	HOST_VM1 = " 192.168.122.161" // Reemplaza esto con la IP estática de tu VM1
+)
+
+// Construcción de URLs dinámicas basadas en la IP configurada
+var (
+	URL_API1 = fmt.Sprintf("http://%s:8081/health", HOST_VM1)
+	URL_API2 = fmt.Sprintf("http://%s:8082/health", HOST_VM1)
+)
+
+// Estructura de respuesta Health
+type HealthResponse struct {
+	Status    string `json:"status"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+	VM        string `json:"VM"`
+	Carnet    string `json:"carnet"`
+}
+
+// Estructura de respuesta Call
+type CallResponse struct {
+	ApiName    string `json:"apiname"`
+	Message    string `json:"message"`
+	Connection bool   `json:"connection"`
+	Carnet     string `json:"carnet"`
+}
+
+func main() {
+	// 1. Endpoint de Salud
+	http.HandleFunc("/health", healthHandler)
+
+	// 2. Endpoints de llamadas a otras APIs
+	// GET /api3/#CARNET/call-api1
+	http.HandleFunc(fmt.Sprintf("/api3/%s/call-api1", CARNET), callApi1Handler)
+	// GET /api3/#CARNET/call-api2
+	http.HandleFunc(fmt.Sprintf("/api3/%s/call-api2", CARNET), callApi2Handler)
+
+	fmt.Printf("Iniciando %s en la %s puerto %s...\n", API_NAME, CURRENT_VM, PORT)
+	fmt.Printf("Apuntando a VM1 en: %s\n", HOST_VM1)
+
+	if err := http.ListenAndServe(PORT, nil); err != nil {
+		fmt.Printf("Error iniciando servidor: %s\n", err)
+	}
+}
+
+// Handler: /health
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	response := HealthResponse{
+		Status:    "UP",
+		Message:   "API3 is Ready",
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+		VM:        CURRENT_VM,
+		Carnet:    CARNET,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// Handler: Call API 1
+func callApi1Handler(w http.ResponseWriter, r *http.Request) {
+	// Llama a API1 ubicada en VM1 (puerto 8081)
+	handleRemoteCall(w, "API1", "VM1", URL_API1)
+}
+
+// Handler: Call API 2
+func callApi2Handler(w http.ResponseWriter, r *http.Request) {
+	// Llama a API2 ubicada en VM1 (puerto 8082)
+	handleRemoteCall(w, "API2", "VM1", URL_API2)
+}
+
+// Lógica reutilizable para hacer peticiones HTTP
+func handleRemoteCall(w http.ResponseWriter, targetApiName, targetVM, targetURL string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Realizar petición GET
+	resp, err := http.Get(targetURL)
+
+	// Manejo de errores de conexión
+	if err != nil || resp.StatusCode != http.StatusOK {
+		failResponse := CallResponse{
+			ApiName:    targetApiName,
+			Message:    fmt.Sprintf("ERROR: The %s located on the %s is not working", targetApiName, targetVM),
+			Connection: false,
+			Carnet:     CARNET,
+		}
+		json.NewEncoder(w).Encode(failResponse)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Leer y decodificar respuesta
+	body, _ := ioutil.ReadAll(resp.Body)
+	var healthResp HealthResponse
+	json.Unmarshal(body, &healthResp)
+
+	// Verificar si el estado es UP
+	if healthResp.Status == "UP" {
+		successResponse := CallResponse{
+			ApiName:    targetApiName,
+			Message:    fmt.Sprintf("The %s located on the %s is working", targetApiName, targetVM),
+			Connection: true,
+			Carnet:     CARNET,
+		}
+		json.NewEncoder(w).Encode(successResponse)
+	} else {
+		failResponse := CallResponse{
+			ApiName:    targetApiName,
+			Message:    fmt.Sprintf("ERROR: The %s located on the %s is not working", targetApiName, targetVM),
+			Connection: false,
+			Carnet:     CARNET,
+		}
+		json.NewEncoder(w).Encode(failResponse)
+	}
+}
