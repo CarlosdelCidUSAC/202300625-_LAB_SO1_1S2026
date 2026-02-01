@@ -5,7 +5,7 @@ Este documento describe la comunicación entre las 3 APIs (API1, API2, API3) seg
 ## Configuración General
 
 ### Variables Personalizadas
-- **#CARNET**: `202300625` (reemplazar en todas las rutas y respuestas)
+- **#CARNET**: `202300625` 
 - **Formato de datos**: JSON
 - **Protocolo**: REST/HTTP
 
@@ -260,15 +260,6 @@ curl http://192.168.100.10:8081/api1/202300625/call-api3
 curl http://192.168.100.20:8083/api3/202300625/call-api2
 ```
 
-## Consideraciones de Implementación
-
-1. **Validación de carnet**: Todas las APIs deben validar que el carnet en la URL sea "202300625"
-2. **Manejo de timeouts**: Configurar timeout de 5 segundos para llamadas HTTP
-3. **Logging**: Registrar todas las llamadas entre APIs para debugging
-4. **Variables de entorno**: Configurar URLs de otras APIs mediante variables de entorno
-5. **Pruebas unitarias**: Implementar pruebas para todos los escenarios de comunicación
-6. **Documentación**: Mantener actualizada la documentación de endpoints y formatos
-
 ## Diagrama de Comunicación
 
 ```
@@ -293,5 +284,3 @@ Usuario
    │
    └───────────HTTP Call───▶[ API2:8082 ] (VM diferente)
 ```
-
-Esta documentación debe ser seguida estrictamente para garantizar la interoperabilidad entre las APIs.

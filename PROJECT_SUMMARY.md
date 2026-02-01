@@ -6,9 +6,9 @@ Diseño e implementación de un entorno virtualizado que integre el uso de máqu
 ## Componentes Implementados (Adaptados a Especificaciones)
 
 ### 1. Máquinas Virtuales (3 VMs con KVM)
-- **VM1 (vm1-containerd)**: Runtime Containerd, ejecuta API1 y API2
-- **VM2 (vm2-containerd)**: Runtime Containerd, ejecuta API3
-- **VM3 (vm3-docker)**: Runtime Docker, ejecuta ZOT Registry
+- **VM1 **: Runtime Containerd, ejecuta API1 y API2
+- **VM2 **: Runtime Containerd, ejecuta API3
+- **VM3 **: Runtime Docker, ejecuta ZOT Registry
 
 ### 2. APIs REST con Contenedores Personalizados
 - **API1**: Ejecutada en VM1, puerto 8081
@@ -92,7 +92,7 @@ Diseño e implementación de un entorno virtualizado que integre el uso de máqu
 1. **Configuración de VMs**:
    - Instalar KVM y crear las 3 VMs
    - Configurar red bridge
-   - Instalar sistemas operativos (Ubuntu Server)
+   - Instalar sistemas operativos (Debian Trixie)
 
 2. **Implementación de Registro**:
    - Instalar Zot en vm2-registry

@@ -53,7 +53,7 @@ echo "-> Enviando Configuración Zot a VM3 ($VM3_IP)..."
 scp -r container-registry/zot-config $USER@$VM3_IP:/home/$USER/zot-config
 
 echo "=== [4/6] Desplegando en VM 1 (API 1 :8081 & API 2 :8082) ==="
-ssh -tt $USER@$VM1_IP << 'EOF'
+ssh $USER@$VM1_IP << 'EOF'
     # Importar imágenes a containerd
     sudo ctr images import api1.tar
     sudo ctr images import api2.tar
@@ -77,7 +77,7 @@ ssh -tt $USER@$VM1_IP << 'EOF'
 EOF
 
 echo "=== [5/6] Desplegando en VM 2 (API 3 :8083) ==="
-ssh -tt $USER@$VM2_IP << 'EOF'
+ssh $USER@$VM2_IP << 'EOF'
     sudo ctr images import api3.tar
 
     # --- API 3 ---
@@ -92,7 +92,7 @@ ssh -tt $USER@$VM2_IP << 'EOF'
 EOF
 
 echo "=== [6/6] Desplegando Zot en VM 3 ==="
-ssh -tt $USER@$VM3_IP << 'EOF'
+ssh $USER@$VM3_IP << 'EOF'
     if [ "$(sudo docker ps -aq -f name=zot-registry)" ]; then
         sudo docker stop zot-registry
         sudo docker rm zot-registry
