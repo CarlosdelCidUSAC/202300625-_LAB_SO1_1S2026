@@ -1,123 +1,558 @@
-# Evidencia de Pruebas
+# Evidencia Completa de Pruebas Funcionales
 
-Este documento consolida evidencia de funcionamiento para los endpoints y la comunicación entre APIs.
-
----
-
-## 1. Endpoints `/health`
-
-### API1
-- URL: `http://192.168.122.10:8081/health`
-- Evidencia (captura o log):
-  - Inserta captura en `docs/operations/assets/api1-health.png`
-
-### API2
-- URL: `http://192.168.122.10:8082/health`
-- Evidencia (captura o log):
-  - Inserta captura en `docs/operations/assets/api2-health.png`
-
-### API3
-- URL: `http://192.168.122.20:8083/health`
-- Evidencia (captura o log):
-  - Inserta captura en `docs/operations/assets/api3-health.png`
+**Proyecto:** Desarrollo, Conexión y Gestión de Contenedores en Entornos Virtualizados  
+**Carnet:** 202300625  
+**Fecha:** Febrero 2026  
+**Universidad San Carlos de Guatemala**
 
 ---
 
-## 2. Comunicación exitosa entre APIs
+## Tabla de Contenidos
 
-### API2 -> API1 (connection: true)
-- URL: `http://192.168.122.10:8082/api2/202300625/call-api1`
-- Evidencia requerida: JSON con `connection: true`.
-- Captura o log: `docs/operations/assets/api2-call-api1-ok.png`
-
-### API1 -> API3 (connection: true)
-- URL: `http://192.168.122.10:8081/api1/202300625/call-api3`
-- Evidencia requerida: JSON con `connection: true`.
-- Captura o log: `docs/operations/assets/api1-call-api3-ok.png`
-
-### API3 -> API2 (connection: true)
-- URL: `http://192.168.122.20:8083/api3/202300625/call-api2`
-- Evidencia requerida: JSON con `connection: true`.
-- Captura o log: `docs/operations/assets/api3-call-api2-ok.png`
+1. [Resumen Ejecutivo](#resumen-ejecutivo)
+2. [Endpoints /health](#endpoints-health)
+3. [Comunicación entre APIs](#comunicación-entre-apis)
+4. [Manejo de Errores](#manejo-de-errores)
+5. [Pruebas de Registro (Zot)](#pruebas-de-registro-zot)
+6. [Logs de Ejecución](#logs-de-ejecución)
+7. [Checklist Final](#checklist-final)
 
 ---
 
-## 3. Manejo de errores (nodo caído)
+## Resumen Ejecutivo
 
-1. Detener temporalmente una API en su VM.
-2. Ejecutar la llamada desde otra API.
-3. Guardar evidencia del JSON con `connection: false`.
+Este documento contiene la evidencia de todas las pruebas funcionales realizadas al sistema. Incluye:
 
-### Ejemplo: API1 -> API3 (API3 detenido)
-- URL: `http://192.168.122.10:8081/api1/202300625/call-api3`
-- Evidencia requerida: JSON con `connection: false`.
-- Captura o log: `docs/operations/assets/api1-call-api3-error.png`
+- **3 APIs REST** ejecutándose en Go
+- **Comunicación de 6 direcciones** entre APIs (cada API llama a las otras 2)
+- **Manejo robusto de errores** cuando un nodo no está disponible
+- **Registro privado Zot** para almacenamiento de imágenes
 
 ---
 
-## 4. Logs
+## Endpoints /health
+
+## Endpoints /health
+
+Estos endpoints verifican que cada API esté operativa y lista para recibir solicitudes.
+
+### API1 - Health Check
+
+**URL:** `http://192.168.122.10:8081/health`  
+**Método:** GET  
+**Descripción:** Verifica el estado de operación de API1 en VM1
+
+**Respuesta esperada:**
+```json
+{
+  "status": "UP",
+  "message": "API1 is Ready",
+  "timestamp": "2026-02-02T10:30:00Z",
+  "VM": "VM1",
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8081/health | jq .
+```
+
+**Evidencia:**
+- [ ] Captura de pantalla: `docs/operations/assets/api1-health.png`
+- [ ] Log de ejecución: `logs/api1-health.log`
+
+---
+
+### API2 - Health Check
+
+**URL:** `http://192.168.122.10:8082/health`  
+**Método:** GET  
+**Descripción:** Verifica el estado de operación de API2 en VM1
+
+**Respuesta esperada:**
+```json
+{
+  "status": "UP",
+  "message": "API2 is Ready",
+  "timestamp": "2026-02-02T10:31:00Z",
+  "VM": "VM1",
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8082/health | jq .
+```
+
+**Evidencia:**
+- [ ] Captura de pantalla: `docs/operations/assets/api2-health.png`
+- [ ] Log de ejecución: `logs/api2-health.log`
+
+---
+
+### API3 - Health Check
+
+**URL:** `http://192.168.122.20:8083/health`  
+**Método:** GET  
+**Descripción:** Verifica el estado de operación de API3 en VM2
+
+**Respuesta esperada:**
+```json
+{
+  "status": "UP",
+  "message": "API3 is Ready",
+  "timestamp": "2026-02-02T10:32:00Z",
+  "VM": "VM2",
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.20:8083/health | jq .
+```
+
+**Evidencia:**
+- [ ] Captura de pantalla: `docs/operations/assets/api3-health.png`
+- [ ] Log de ejecución: `logs/api3-health.log`
+
+---
+
+## Comunicación entre APIs
+
+### Matriz de Comunicación
+
+| Origen | Destino | URL | Estado esperado |
+|--------|---------|-----|-----------------|
+| API1 | API2 | /api1/202300625/call-api2 | ✓ connection: true |
+| API1 | API3 | /api1/202300625/call-api3 | ✓ connection: true |
+| API2 | API1 | /api2/202300625/call-api1 | ✓ connection: true |
+| API2 | API3 | /api2/202300625/call-api3 | ✓ connection: true |
+| API3 | API1 | /api3/202300625/call-api1 | ✓ connection: true |
+| API3 | API2 | /api3/202300625/call-api2 | ✓ connection: true |
+
+---
+
+### Prueba 1: API1 → API2
+
+**URL:** `http://192.168.122.10:8081/api1/202300625/call-api2`  
+**Método:** GET  
+**Descripción:** API1 verifica si API2 está operativa
+
+**Respuesta esperada (éxito):**
+```json
+{
+  "apiname": "API2",
+  "message": "The API2 located on the VM1 is working",
+  "connection": true,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8081/api1/202300625/call-api2 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api1-call-api2-ok.png`
+- [ ] Log: `logs/api1-call-api2-ok.log`
+
+---
+
+### Prueba 2: API1 → API3
+
+**URL:** `http://192.168.122.10:8081/api1/202300625/call-api3`  
+**Método:** GET  
+**Descripción:** API1 verifica si API3 está operativa (en VM2)
+
+**Respuesta esperada (éxito):**
+```json
+{
+  "apiname": "API3",
+  "message": "The API3 located on the VM2 is working",
+  "connection": true,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8081/api1/202300625/call-api3 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api1-call-api3-ok.png`
+- [ ] Log: `logs/api1-call-api3-ok.log`
+
+---
+
+### Prueba 3: API2 → API1
+
+**URL:** `http://192.168.122.10:8082/api2/202300625/call-api1`  
+**Método:** GET  
+**Descripción:** API2 verifica si API1 está operativa
+
+**Respuesta esperada (éxito):**
+```json
+{
+  "apiname": "API1",
+  "message": "The API1 located on the VM1 is working",
+  "connection": true,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8082/api2/202300625/call-api1 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api2-call-api1-ok.png`
+- [ ] Log: `logs/api2-call-api1-ok.log`
+
+---
+
+### Prueba 4: API2 → API3
+
+**URL:** `http://192.168.122.10:8082/api2/202300625/call-api3`  
+**Método:** GET  
+**Descripción:** API2 verifica si API3 está operativa
+
+**Respuesta esperada (éxito):**
+```json
+{
+  "apiname": "API3",
+  "message": "The API3 located on the VM2 is working",
+  "connection": true,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8082/api2/202300625/call-api3 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api2-call-api3-ok.png`
+- [ ] Log: `logs/api2-call-api3-ok.log`
+
+---
+
+### Prueba 5: API3 → API1
+
+**URL:** `http://192.168.122.20:8083/api3/202300625/call-api1`  
+**Método:** GET  
+**Descripción:** API3 verifica si API1 está operativa
+
+**Respuesta esperada (éxito):**
+```json
+{
+  "apiname": "API1",
+  "message": "The API1 located on the VM1 is working",
+  "connection": true,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.20:8083/api3/202300625/call-api1 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api3-call-api1-ok.png`
+- [ ] Log: `logs/api3-call-api1-ok.log`
+
+---
+
+### Prueba 6: API3 → API2
+
+**URL:** `http://192.168.122.20:8083/api3/202300625/call-api2`  
+**Método:** GET  
+**Descripción:** API3 verifica si API2 está operativa
+
+**Respuesta esperada (éxito):**
+```json
+{
+  "apiname": "API2",
+  "message": "The API2 located on the VM1 is working",
+  "connection": true,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.20:8083/api3/202300625/call-api2 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api3-call-api2-ok.png`
+- [ ] Log: `logs/api3-call-api2-ok.log`
+
+---
+
+## Manejo de Errores
+
+### Escenario 1: API1 No Disponible
+
+**Procedimiento:**
+1. Detener contenedor de API1 en VM1
+2. Ejecutar llamadas desde API2 y API3 a API1
+
+**Detener API1:**
+```bash
+ssh usuario@192.168.122.10
+sudo ctr containers delete api1-container
+```
+
+### Prueba: API2 → API1 (API1 caída)
+
+**URL:** `http://192.168.122.10:8082/api2/202300625/call-api1`
+
+**Respuesta esperada (error):**
+```json
+{
+  "apiname": "API1",
+  "message": "ERROR: The API1 located on the VM1 is not working",
+  "connection": false,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8082/api2/202300625/call-api1 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api2-call-api1-error.png`
+- [ ] Log: `logs/api2-call-api1-error.log`
+
+---
+
+### Prueba: API3 → API1 (API1 caída)
+
+**URL:** `http://192.168.122.20:8083/api3/202300625/call-api1`
+
+**Respuesta esperada (error):**
+```json
+{
+  "apiname": "API1",
+  "message": "ERROR: The API1 located on the VM1 is not working",
+  "connection": false,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.20:8083/api3/202300625/call-api1 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api3-call-api1-error.png`
+- [ ] Log: `logs/api3-call-api1-error.log`
+
+---
+
+### Escenario 2: API3 No Disponible
+
+**Procedimiento:**
+1. Detener contenedor de API3 en VM2
+2. Ejecutar llamadas desde API1 y API2 a API3
+
+**Detener API3:**
+```bash
+ssh usuario@192.168.122.20
+sudo ctr containers delete api3-container
+```
+
+### Prueba: API1 → API3 (API3 caída)
+
+**URL:** `http://192.168.122.10:8081/api1/202300625/call-api3`
+
+**Respuesta esperada (error):**
+```json
+{
+  "apiname": "API3",
+  "message": "ERROR: The API3 located on the VM2 is not working",
+  "connection": false,
+  "carnet": "202300625"
+}
+```
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.10:8081/api1/202300625/call-api3 | jq .
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/api1-call-api3-error.png`
+- [ ] Log: `logs/api1-call-api3-error.log`
+
+---
+
+## Pruebas de Registro (Zot)
+
+### Verificar que Zot está disponible
+
+**URL:** `http://192.168.122.30:5000/v2/`
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.30:5000/v2/ | jq .
+```
+
+**Respuesta esperada:**
+```json
+{}
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/zot-available.png`
+
+---
+
+### Subir imágenes a Zot
+
+**Procedimiento:**
+
+```bash
+# Etiquetar imágenes localmente
+docker tag api1-202300625:latest 192.168.122.30:5000/api1-202300625:latest
+docker tag api2-202300625:latest 192.168.122.30:5000/api2-202300625:latest
+docker tag api3-202300625:latest 192.168.122.30:5000/api3-202300625:latest
+
+# Subir a Zot
+docker push 192.168.122.30:5000/api1-202300625:latest
+docker push 192.168.122.30:5000/api2-202300625:latest
+docker push 192.168.122.30:5000/api3-202300625:latest
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/zot-push-images.png`
+- [ ] Log: `logs/zot-push.log`
+
+---
+
+### Listar imágenes en Zot
+
+**URL:** `http://192.168.122.30:5000/v2/_catalog`
+
+**Comando de prueba:**
+```bash
+curl -s http://192.168.122.30:5000/v2/_catalog | jq .
+```
+
+**Respuesta esperada:**
+```json
+{
+  "repositories": [
+    "api1-202300625",
+    "api2-202300625",
+    "api3-202300625"
+  ]
+}
+```
+
+**Evidencia:**
+- [ ] Captura: `docs/operations/assets/zot-catalog.png`
+- [ ] Log: `logs/zot-catalog.log`
+
+---
+
+## Logs de Ejecución
 
 ### Generación Automática de Logs
 
-Se han creado scripts automatizados para generar todos los logs de pruebas:
+Se proporcionan scripts para generar y organizar automáticamente los logs:
 
-#### Generar logs de pruebas exitosas:
+**Generar todos los logs:**
 ```bash
-cd scripts
+cd ~/Escritorio/Sopes1/SopesDocu/scripts
 ./generate-logs.sh
-```
-
-#### Generar logs de pruebas de error:
-```bash
-cd scripts
 ./generate-error-logs.sh
 ```
 
-#### Ver logs generados:
+**Ver logs generados:**
 ```bash
-cd scripts
-./view-logs.sh
+cd ~/Escritorio/Sopes1/SopesDocu/logs
+ls -lah
+cat api1-health.log
+cat api1-call-api2-ok.log
+cat api1-call-api3-error.log
 ```
 
-### Logs Generados
+### Estructura de Logs
 
-Los siguientes archivos se crean automáticamente en `logs/`:
+**Ubicación:** `logs/` en la raíz del proyecto
+
+**Archivos generados:**
 
 **Health Checks:**
-- `logs/api1-health.log` - Estado de API1
-- `logs/api2-health.log` - Estado de API2
-- `logs/api3-health.log` - Estado de API3
+- `logs/api1-health.log`
+- `logs/api2-health.log`
+- `logs/api3-health.log`
 
 **Comunicación Exitosa:**
-- `logs/api1-call-api2-ok.log` - API1 → API2 ✓
-- `logs/api1-call-api3-ok.log` - API1 → API3 ✓
-- `logs/api2-call-api1-ok.log` - API2 → API1 ✓
-- `logs/api2-call-api3-ok.log` - API2 → API3 ✓
-- `logs/api3-call-api1-ok.log` - API3 → API1 ✓
-- `logs/api3-call-api2-ok.log` - API3 → API2 ✓
+- `logs/api1-call-api2-ok.log`
+- `logs/api1-call-api3-ok.log`
+- `logs/api2-call-api1-ok.log`
+- `logs/api2-call-api3-ok.log`
+- `logs/api3-call-api1-ok.log`
+- `logs/api3-call-api2-ok.log`
 
 **Manejo de Errores:**
-- `logs/api1-call-api3-error.log` - API1 → API3 (API3 caída) ✗
-- `logs/api2-call-api1-error.log` - API2 → API1 (API1 caída) ✗
-- `logs/api3-call-api2-error.log` - API3 → API2 (API2 caída) ✗
+- `logs/api1-call-api3-error.log`
+- `logs/api2-call-api1-error.log`
+- `logs/api3-call-api2-error.log`
 
 **Resumen:**
-- `logs/resumen.log` - Resumen general de todas las pruebas
-
-### Consultar Documentación
-
-Para más información sobre los scripts de logs:
-- Ver `scripts/README.md` - Guía completa de uso de scripts
-- Ver `logs/README.md` - Información sobre estructura de logs
+- `logs/resumen.log` - Resumen general de pruebas
 
 ---
 
-## 5. Checklist de evidencia
+## Checklist Final
 
-- [ ] `/health` API1
-- [ ] `/health` API2
-- [ ] `/health` API3
-- [ ] API2 -> API1 (connection: true)
-- [ ] API1 -> API3 (connection: true)
-- [ ] API3 -> API2 (connection: true)
-- [ ] Error controlado con `connection: false`
+### Endpoints /health
+- [ ] GET /health - API1 (192.168.122.10:8081)
+- [ ] GET /health - API2 (192.168.122.10:8082)
+- [ ] GET /health - API3 (192.168.122.20:8083)
+
+### Comunicación Exitosa
+- [ ] API1 → API2 (connection: true)
+- [ ] API1 → API3 (connection: true)
+- [ ] API2 → API1 (connection: true)
+- [ ] API2 → API3 (connection: true)
+- [ ] API3 → API1 (connection: true)
+- [ ] API3 → API2 (connection: true)
+
+### Manejo de Errores
+- [ ] API2 → API1 (connection: false cuando API1 está caída)
+- [ ] API3 → API1 (connection: false cuando API1 está caída)
+- [ ] API1 → API3 (connection: false cuando API3 está caída)
+- [ ] API2 → API3 (connection: false cuando API3 está caída)
+
+### Registro (Zot)
+- [ ] Zot registry disponible en puerto 5000
+- [ ] Imágenes subidas correctamente a Zot
+- [ ] Catálogo de imágenes accesible
+
+### Documentación
+- [ ] Manual técnico completado
+- [ ] Guía de instalación con todos los pasos
+- [ ] Logs generados y organizados
+- [ ] Capturas de pantalla de pruebas incluidas
+- [ ] Código fuente en GitHub
+
+---
+
+**Fecha de Realización:** Febrero 2, 2026  
+**Carnet:** 202300625  
+**Estado:** En Ejecución ✓
