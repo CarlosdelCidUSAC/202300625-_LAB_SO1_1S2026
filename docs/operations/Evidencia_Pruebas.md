@@ -59,9 +59,8 @@ curl -s http://192.168.122.10:8081/health | jq .
 ```
 
 **Evidencia:**
-- [ ] Captura de pantalla: `docs/operations/assets/api1-health.png`
-- [ ] Log de ejecución: `logs/api1-health.log`
 
+![alt text](assets/api1-health.png)
 ---
 
 ### API2 - Health Check
@@ -87,8 +86,9 @@ curl -s http://192.168.122.10:8082/health | jq .
 ```
 
 **Evidencia:**
-- [ ] Captura de pantalla: `docs/operations/assets/api2-health.png`
-- [ ] Log de ejecución: `logs/api2-health.log`
+
+![alt text](assets/api2-health.png)
+
 
 ---
 
@@ -115,8 +115,8 @@ curl -s http://192.168.122.20:8083/health | jq .
 ```
 
 **Evidencia:**
-- [ ] Captura de pantalla: `docs/operations/assets/api3-health.png`
-- [ ] Log de ejecución: `logs/api3-health.log`
+
+![alt text](assets/api3-health.png)
 
 ---
 
