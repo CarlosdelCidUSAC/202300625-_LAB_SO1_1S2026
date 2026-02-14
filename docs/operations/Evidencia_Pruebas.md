@@ -355,10 +355,6 @@ curl -s http://192.168.122.10:8082/api2/202300625/call-api1 | jq .
 curl -s http://192.168.122.20:8083/api3/202300625/call-api1 | jq .
 ```
 
-**Evidencia:**
-- [ ] Captura: `docs/operations/assets/api3-call-api1-error.png`
-- [ ] Log: `logs/api3-call-api1-error.log`
-
 ---
 
 ### Escenario 2: API3 No Disponible
@@ -392,10 +388,6 @@ sudo ctr containers delete api3-container
 curl -s http://192.168.122.10:8081/api1/202300625/call-api3 | jq .
 ```
 
-**Evidencia:**
-- [ ] Captura: `docs/operations/assets/api1-call-api3-error.png`
-- [ ] Log: `logs/api1-call-api3-error.log`
-
 ---
 
 ## Pruebas de Registro (Zot)
@@ -414,9 +406,6 @@ curl -s http://192.168.122.30:5000/v2/ | jq .
 {}
 ```
 
-**Evidencia:**
-- [ ] Captura: `docs/operations/assets/zot-available.png`
-
 ---
 
 ### Subir imágenes a Zot
@@ -434,10 +423,6 @@ docker push 192.168.122.30:5000/api1-202300625:latest
 docker push 192.168.122.30:5000/api2-202300625:latest
 docker push 192.168.122.30:5000/api3-202300625:latest
 ```
-
-**Evidencia:**
-- [ ] Captura: `docs/operations/assets/zot-push-images.png`
-- [ ] Log: `logs/zot-push.log`
 
 ---
 
@@ -461,62 +446,8 @@ curl -s http://192.168.122.30:5000/v2/_catalog | jq .
 }
 ```
 
-**Evidencia:**
-- [ ] Captura: `docs/operations/assets/zot-catalog.png`
-- [ ] Log: `logs/zot-catalog.log`
-
 ---
 
-## Logs de Ejecución
-
-### Generación Automática de Logs
-
-Se proporcionan scripts para generar y organizar automáticamente los logs:
-
-**Generar todos los logs:**
-```bash
-cd ~/Escritorio/Sopes1/SopesDocu/scripts
-./generate-logs.sh
-./generate-error-logs.sh
-```
-
-**Ver logs generados:**
-```bash
-cd ~/Escritorio/Sopes1/SopesDocu/logs
-ls -lah
-cat api1-health.log
-cat api1-call-api2-ok.log
-cat api1-call-api3-error.log
-```
-
-### Estructura de Logs
-
-**Ubicación:** `logs/` en la raíz del proyecto
-
-**Archivos generados:**
-
-**Health Checks:**
-- `logs/api1-health.log`
-- `logs/api2-health.log`
-- `logs/api3-health.log`
-
-**Comunicación Exitosa:**
-- `logs/api1-call-api2-ok.log`
-- `logs/api1-call-api3-ok.log`
-- `logs/api2-call-api1-ok.log`
-- `logs/api2-call-api3-ok.log`
-- `logs/api3-call-api1-ok.log`
-- `logs/api3-call-api2-ok.log`
-
-**Manejo de Errores:**
-- `logs/api1-call-api3-error.log`
-- `logs/api2-call-api1-error.log`
-- `logs/api3-call-api2-error.log`
-
-**Resumen:**
-- `logs/resumen.log` - Resumen general de pruebas
-
----
 
 ## Checklist Final
 
@@ -552,6 +483,9 @@ cat api1-call-api3-error.log
 - [ ] Código fuente en GitHub
 
 ---
+
+![alt text](assets/Health.png)
+
 
 **Fecha de Realización:** Febrero 2, 2026  
 **Carnet:** 202300625  
