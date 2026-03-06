@@ -1,0 +1,1 @@
+savedcmd_/home/carlos/Desktop/Proyecto2/kernel-module/Module.symvers :=  scripts/mod/modpost -M -m       -o /home/carlos/Desktop/Proyecto2/kernel-module/Module.symvers -T /home/carlos/Desktop/Proyecto2/kernel-module/modules.order -i Module.symvers -e 

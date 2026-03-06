@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  valkey:
+    image: valkey/valkey:latest
+    container_name: db_valkey
+    ports:
+      - "6379:6379"
+    command: valkey-server --appendonly yes
+    volumes:
+      - valkey_data:/data
+    networks:
+      - red_telemetria
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dashboard_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_LOG_LEVEL=info
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - red_telemetria
+
+volumes:
+  valkey_data:
+  grafana_data:
+
+
+networks:
+  red_telemetria:
+    driver: bridge

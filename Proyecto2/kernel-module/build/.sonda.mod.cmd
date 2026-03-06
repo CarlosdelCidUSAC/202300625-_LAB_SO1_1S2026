@@ -1,0 +1,1 @@
+savedcmd_/home/carlos/Desktop/Proyecto2/kernel-module/sonda.mod := printf '%s\n'   src/sonda.o | awk '!x[$$0]++ { print("/home/carlos/Desktop/Proyecto2/kernel-module/"$$0) }' > /home/carlos/Desktop/Proyecto2/kernel-module/sonda.mod
