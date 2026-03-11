@@ -23,8 +23,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=1234
-      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_daemon-so1_PASSWORD=1234
+      - GF_SECURITY_daemon-so1_USER=daemon-so1
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_LOG_LEVEL=info

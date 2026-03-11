@@ -8,7 +8,7 @@ echo "=========================================="
 echo ""
 
 # Credenciales para validacion final (sobrescribir por variable de entorno si aplica)
-GRAFANA_USER="${GRAFANA_USER:-admin}"
+GRAFANA_USER="${GRAFANA_USER:-daemon-so1}"
 GRAFANA_PASSWORD="${GRAFANA_PASSWORD:-1234}"
 
 # 1. Asegurar archivo de provisioning del datasource

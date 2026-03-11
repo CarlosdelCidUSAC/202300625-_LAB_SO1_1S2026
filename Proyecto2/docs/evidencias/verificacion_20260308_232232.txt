@@ -1,0 +1,284 @@
+╔════════════════════════════════════════════╗
+║  VERIFICACIÓN DE REQUISITOS - PROYECTO 2   ║
+║  Sistema Operativos 1                      ║
+║  Carnet: 202300625                         ║
+╚════════════════════════════════════════════╝
+
+Fecha: 2026-03-08 23:22:32
+Usuario: root
+Sistema: Linux debian 6.12.73+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.73-1 (2026-02-17) x86_64 GNU/Linux
+
+
+==========================================
+1. MÓDULO DE KERNEL
+==========================================
+
+[1] Archivo fuente sonda.c existe: PASS
+[2] Makefile existe: PASS
+[3] Compilando módulo kernel: PASS
+[4] Archivo sonda.ko generado: PASS
+[5] Cargando módulo en el kernel: PASS
+[6] Archivo /proc/continfo_pr2_so1_202300625 existe: PASS
+[7] Formato del archivo /proc correcto: PASS
+
+--- Muestra del archivo /proc ---
+[MEMORIA]
+Total: 3921 MB
+Libre: 141 MB
+Uso: 3780 MB
+
+[PROCESOS]
+PID|Nombre|VSZ|RSS|%RAM|CPU|ComandoID
+1|systemd|26248|13012|0.32|5413420353|/usr/lib/systemd/systemd
+345|systemd-journal|67668|24836|0.61|673520349|/usr/lib/systemd/systemd-journald
+404|systemd-udevd|36892|7420|0.18|543235253|/usr/bin/udevadm
+726|accounts-daemon|308992|6128|0.15|27864665|/usr/libexec/accounts-daemon
+731|avahi-daemon|7040|4156|0.10|746314079|/usr/sbin/avahi-daemon
+733|cron|6860|2668|0.06|12000000|/usr/sbin/cron
+735|dbus-daemon|10040|5708|0.14|3886725612|/usr/bin/dbus-daemon
+741|polkitd|382216|7404|0.18|155079684|/usr/lib/polkit-1/polkitd
+743|qemu-ga|80896|3340|0.08|11979372|/usr/sbin/qemu-ga
+746|udisksd|404540|7888|0.19|804542080|/usr/libexec/udisks2/udisksd
+752|avahi-daemon|6060|1468|0.03|0|/usr/sbin/avahi-daemon
+803|ModemManager|390912|6608|0.16|278145084|/usr/sbin/ModemManager
+804|NetworkManager|339596|13788|0.34|2696733198|/usr/sbin/NetworkManager
+805|wpa_supplicant|17516|4412|0.10|36000000|/usr/sbin/wpa_supplicant
+846|lightdm|380964|6368|0.15|18565855|/usr/sbin/lightdm
+848|containerd|2246220|46908|1.16|12000000|/usr/bin/containerd
+867|sshd|11764|5444|0.13|35579056|/usr/sbin/sshd
+870|Xorg|945096|59712|1.48|311822391818|/usr/lib/xorg/Xorg
+873|agetty|8156|2596|0.06|4000000|/usr/sbin/agetty
+879|apache2|6836|2260|0.05|326861479|/usr/sbin/apache2
+952|dockerd|2720804|96276|2.39|55670921|/usr/sbin/dockerd
+1102|rtkit-daemon|87004|3088|0.07|27975513|/usr/libexec/rtkit-daemon
+1218|systemd|24212|9948|0.24|3294186713|/usr/lib/systemd/systemd
+
+[8] Datos de memoria (Total, Libre, Uso): PASS
+[9] Procesos listados correctamente: PASS (458 procesos)
+
+==========================================
+2. DAEMON DE GO
+==========================================
+
+[10] Archivo go.mod existe: PASS
+[11] Estructura de directorios correcta: PASS
+[12] Compilando daemon de GO: PASS
+[13] Binario daemon-so1-fase4 generado: PASS
+[14] Paquete internal/parser existe: PASS
+[15] Paquete internal/analyzer existe: PASS
+[16] Paquete internal/storage existe: PASS
+[17] Paquete internal/orchestrator existe: PASS
+
+==========================================
+3. CRONJOB
+==========================================
+
+[18] Script install-cron.sh existe: PASS
+[19] Script uninstall-cron.sh existe: PASS
+[20] Script generar.sh existe: PASS
+[21] Cronjob instalado en crontab: PASS
+
+--- Cronjobs activos ---
+*/2 * * * * /home/carlos/Desktop/Proyecto2/docker/generar.sh >> /var/log/proyecto2-contenedores.log 2>&1
+
+
+==========================================
+4. INFRAESTRUCTURA DOCKER
+==========================================
+
+[22] Archivo docker-compose.yml existe: PASS
+[23] Contenedor Valkey corriendo: PASS
+[24] Contenedor Grafana corriendo: PASS
+[25] Conexión a Valkey funcional: PASS
+[26] Dashboard de Grafana provisionado: PASS
+
+==========================================
+5. CONTENEDORES DE PRUEBA
+==========================================
+
+[27] Contenedores de prueba generados: PASS (123 contenedores)
+
+--- Contenedores activos ---
+NAMES                     IMAGE                    STATUS
+confident_hoover          roldyoran/go-client      Up 51 seconds
+infallible_herschel       roldyoran/go-client      Up 51 seconds
+naughty_brahmagupta       roldyoran/go-client      Up 51 seconds
+nifty_tesla               roldyoran/go-client      Up 51 seconds
+quizzical_cray            alpine                   Up 52 seconds
+festive_greider           alpine                   Up 2 minutes
+nice_goodall              roldyoran/go-client      Up 2 minutes
+busy_kalam                alpine                   Up 2 minutes
+inspiring_bouman          roldyoran/go-client      Up 2 minutes
+keen_franklin             alpine                   Up 2 minutes
+sharp_raman               alpine                   Up 4 minutes
+intelligent_dhawan        roldyoran/go-client      Up 4 minutes
+adoring_rhodes            roldyoran/go-client      Up 4 minutes
+xenodochial_boyd          roldyoran/go-client      Up 6 minutes
+exciting_newton           alpine                   Up 6 minutes
+silly_black               alpine                   Up 6 minutes
+nice_greider              roldyoran/go-client      Up 6 minutes
+beautiful_hellman         alpine                   Up 8 minutes
+strange_burnell           roldyoran/go-client      Up 8 minutes
+focused_driscoll          roldyoran/go-client      Up 8 minutes
+sad_mendeleev             roldyoran/go-client      Up 8 minutes
+intelligent_pare          alpine                   Up 10 minutes
+happy_kowalevski          roldyoran/go-client      Up 10 minutes
+upbeat_edison             roldyoran/go-client      Up 12 minutes
+agitated_tharp5           alpine                   Up 12 minutes
+funny_chandrasekhar       alpine                   Up 12 minutes
+wonderful_galileo         roldyoran/go-client      Up 12 minutes
+relaxed_banzai            roldyoran/go-client      Up About an hour
+mystifying_matsumoto      alpine                   Up About an hour
+bold_shannon              alpine                   Up About an hour
+vigorous_haibt            alpine                   Up About an hour
+angry_dhawan              roldyoran/go-client      Up About an hour
+objective_nash            alpine                   Up About an hour
+gallant_shirley           alpine                   Up About an hour
+romantic_montalcini       alpine                   Up About an hour
+zen_moser                 alpine                   Up About an hour
+compassionate_blackburn   alpine                   Up About an hour
+intelligent_jepsen        roldyoran/go-client      Up About an hour
+serene_benz               alpine                   Up About an hour
+sleepy_mendel             roldyoran/go-client      Up About an hour
+relaxed_moser             alpine                   Up About an hour
+jovial_wing               roldyoran/go-client      Up About an hour
+infallible_kepler         roldyoran/go-client      Up About an hour
+vibrant_mendeleev         roldyoran/go-client      Up About an hour
+charming_merkle           alpine                   Up About an hour
+heuristic_golick          roldyoran/go-client      Up About an hour
+happy_blackburn           alpine                   Up 2 hours
+unruffled_feistel         alpine                   Up 2 hours
+relaxed_kowalevski        alpine                   Up 2 hours
+boring_murdock            roldyoran/go-client      Up 2 hours
+interesting_shockley      alpine                   Up 2 hours
+sleepy_maxwell            alpine                   Up 2 hours
+angry_antonelli           alpine                   Up 2 hours
+charming_lalande          alpine                   Up 2 hours
+recursing_wiles           roldyoran/go-client      Up 2 hours
+loving_wilson             alpine                   Up 2 hours
+nervous_goldberg3         alpine                   Up 2 hours
+intelligent_maxwell       alpine                   Up 2 hours
+vigilant_ellis            alpine                   Up 2 hours
+strange_ptolemy           alpine                   Up 2 hours
+jolly_shamir              roldyoran/go-client      Up 2 hours
+condescending_meitner     roldyoran/go-client      Up 2 hours
+serene_liskov             alpine                   Up 2 hours
+sharp_shtern              roldyoran/go-client      Up 2 hours
+stupefied_matsumoto       roldyoran/go-client      Up 2 hours
+affectionate_lewin        roldyoran/go-client      Up 2 hours
+distracted_noyce          alpine                   Up 2 hours
+wizardly_noether          roldyoran/go-client      Up 2 hours
+peaceful_engelbart        roldyoran/go-client      Up 2 hours
+busy_curran               alpine                   Up 2 hours
+vigorous_meitner          alpine                   Up 2 hours
+dreamy_bardeen            roldyoran/go-client      Up 2 days
+eager_wozniak             roldyoran/go-client      Up 2 days
+clever_elgamal            alpine                   Up 2 days
+flamboyant_bell           roldyoran/go-client      Up 2 days
+strange_shirley           alpine                   Up 2 days
+determined_ramanujan      alpine                   Up 2 days
+hardcore_antonelli        roldyoran/go-client      Up 2 days
+nifty_lumiere             roldyoran/go-client      Up 2 days
+nostalgic_buck            roldyoran/go-client      Up 2 days
+kind_curie                alpine                   Up 2 days
+gracious_wilbur           roldyoran/go-client      Up 2 days
+flamboyant_cori           roldyoran/go-client      Up 2 days
+nice_thompson             alpine                   Up 2 days
+hardcore_khorana          alpine                   Up 2 days
+affectionate_khayyam      roldyoran/go-client      Up 2 days
+frosty_haslett            roldyoran/go-client      Up 2 days
+competent_montalcini      roldyoran/go-client      Up 2 days
+jovial_kepler             alpine                   Up 2 days
+eloquent_vaughan          alpine                   Up 2 days
+youthful_volhard          alpine                   Up 3 days
+clever_jepsen             alpine                   Up 3 days
+confident_gauss           alpine                   Up 3 days
+heuristic_haslett         alpine                   Up 3 days
+silly_blackwell           roldyoran/go-client      Up 3 days
+sweet_boyd                alpine                   Up 3 days
+vibrant_blackburn         alpine                   Up 3 days
+stupefied_cori            alpine                   Up 3 days
+unruffled_bohr            alpine                   Up 3 days
+busy_bohr                 alpine                   Up 3 days
+crazy_matsumoto           alpine                   Up 3 days
+nostalgic_carver          alpine                   Up 3 days
+distracted_sinoussi       alpine                   Up 3 days
+dashboard_grafana         grafana/grafana:latest   Up 3 days
+db_valkey                 valkey/valkey:latest     Up 3 days (healthy)
+loving_greider            alpine                   Up 3 days
+vibrant_antonelli         alpine                   Up 3 days
+nice_kapitsa              alpine                   Up 3 days
+clever_euclid             alpine                   Up 3 days
+quizzical_turing          alpine                   Up 3 days
+vigilant_hermann          alpine                   Up 3 days
+upbeat_lehmann            alpine                   Up 3 days
+brave_darwin              alpine                   Up 3 days
+trusting_hellman          alpine                   Up 3 days
+practical_faraday         alpine                   Up 3 days
+sad_austin                alpine                   Up 3 days
+jolly_newton              alpine                   Up 3 days
+zen_herschel              alpine                   Up 3 days
+beautiful_satoshi         alpine                   Up 3 days
+infallible_cohen          alpine                   Up 3 days
+practical_swanson         alpine                   Up 3 days
+festive_panini            alpine                   Up 3 days
+exciting_goodall          alpine                   Up 3 days
+musing_buck               alpine                   Up 3 days
+nostalgic_rhodes          alpine                   Up 3 days
+
+
+==========================================
+6. ALMACENAMIENTO EN VALKEY
+==========================================
+
+[28] Métricas de memoria en Valkey: PASS
+
+--- Datos en Valkey: metrics:memory:current ---
+total
+3921
+used
+3725
+free
+196
+timestamp
+1772830216
+
+[29] Top 5 contenedores por RAM en Valkey: PASS
+
+--- Top 5 RAM ---
+148626:grafana:285464KB
+7.1
+148728:redis-datasourc:20332KB
+0.5
+147747:valkey-server:18728KB
+0.46
+299569:client:13924KB
+0.34
+299487:client:11772KB
+0.29
+
+[30] Contador de contenedores eliminados: PASS (Total: 92)
+
+==========================================
+7. RESTRICCIONES CLAVE
+==========================================
+
+[31] Código protege contenedor Grafana: PASS
+[32] Configuración de contenedores mínimos: PASS
+
+==========================================
+RESUMEN DE VERIFICACIÓN
+==========================================
+
+
+Total de pruebas: 32
+[0;32mExitosas: 32[0m
+[0;31mFallidas: 0[0m
+
+Porcentaje de cumplimiento: 100.0%
+[0;32m════════════════════════════════════[0m
+[0;32m✓ TODOS LOS REQUISITOS CUMPLIDOS ✓[0m
+[0;32m════════════════════════════════════[0m
+
+Reporte guardado en: /home/carlos/Desktop/Proyecto2/docs/evidencias/verificacion_20260308_232232.txt
+

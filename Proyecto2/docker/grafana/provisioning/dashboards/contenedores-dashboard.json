@@ -73,7 +73,7 @@
             "targets": [
                 {
                     "command": "hget",
-                    "key": "metrics:memory:current",
+                    "keyName": "metrics:memory:current",
                     "field": "total",
                     "refId": "A",
                     "type": "command"
@@ -137,7 +137,7 @@
             "targets": [
                 {
                     "command": "hget",
-                    "key": "metrics:memory:current",
+                    "keyName": "metrics:memory:current",
                     "field": "used",
                     "refId": "A",
                     "type": "command"
@@ -201,7 +201,7 @@
             "targets": [
                 {
                     "command": "hget",
-                    "key": "metrics:memory:current",
+                    "keyName": "metrics:memory:current",
                     "field": "free",
                     "refId": "A",
                     "type": "command"
@@ -265,7 +265,7 @@
             "targets": [
                 {
                     "command": "get",
-                    "key": "stats:containers_deleted",
+                    "keyName": "stats:containers_deleted",
                     "refId": "A",
                     "type": "command"
                 }
@@ -351,12 +351,24 @@
             },
             "targets": [
                 {
-                    "command": "zrange",
-                    "key": "metrics:memory:history",
-                    "start": "-50",
-                    "stop": "-1",
+                    "command": "hget",
+                    "keyName": "metrics:memory:current",
+                    "field": "used",
                     "refId": "A",
-                    "type": "command"
+                    "type": "command",
+                    "streaming": true,
+                    "streamingCapacity": 1000,
+                    "streamingInterval": 5000
+                },
+                {
+                    "command": "hget",
+                    "keyName": "metrics:memory:current",
+                    "field": "free",
+                    "refId": "B",
+                    "type": "command",
+                    "streaming": true,
+                    "streamingCapacity": 1000,
+                    "streamingInterval": 5000
                 }
             ],
             "title": "Uso de RAM a lo Largo del Tiempo",
@@ -410,10 +422,11 @@
             },
             "targets": [
                 {
-                    "command": "zrevrange",
-                    "key": "metrics:containers:ram:top",
-                    "start": "0",
-                    "stop": "4",
+                    "command": "zrange",
+                    "keyName": "metrics:containers:ram:top",
+                    "min": "-5",
+                    "max": "-1",
+                    "withScores": true,
                     "refId": "A",
                     "type": "command"
                 }
@@ -469,10 +482,11 @@
             },
             "targets": [
                 {
-                    "command": "zrevrange",
-                    "key": "metrics:containers:cpu:top",
-                    "start": "0",
-                    "stop": "4",
+                    "command": "zrange",
+                    "keyName": "metrics:containers:cpu:top",
+                    "min": "-5",
+                    "max": "-1",
+                    "withScores": true,
                     "refId": "A",
                     "type": "command"
                 }
@@ -553,12 +567,13 @@
             },
             "targets": [
                 {
-                    "command": "zrange",
-                    "key": "metrics:containers:deleted:history",
-                    "start": "-20",
-                    "stop": "-1",
+                    "command": "get",
+                    "keyName": "stats:containers_deleted",
                     "refId": "A",
-                    "type": "command"
+                    "type": "command",
+                    "streaming": true,
+                    "streamingCapacity": 1000,
+                    "streamingInterval": 5000
                 }
             ],
             "title": "Contenedores Eliminados a lo Largo del Tiempo",
@@ -584,6 +599,6 @@
     "timezone": "",
     "title": "Telemetría de Contenedores - Proyecto 2 SO1",
     "uid": "contenedores-so1",
-    "version": 1,
+    "version": 2,
     "weekStart": ""
 }

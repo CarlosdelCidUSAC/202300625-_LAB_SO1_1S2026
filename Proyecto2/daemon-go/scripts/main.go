@@ -1,5 +1,14 @@
 package main
 
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
 // Representa la informacion global de RAM del sistema
 type MemoriaGlobal struct {
 	TotalRAM int64
@@ -23,15 +32,6 @@ type CapturaTelemetria struct {
 	Memoria   MemoriaGlobal
 	Procesos  []Proceso
 }
-
-import (
-	"fmt"
-	"os"
-	"os/exec"
-	"os/signal"
-	"syscall"
-	"time"
-)
 
 func main() {
 	fmt.Println("Iniciando Daemon Gestor de Contenedores...")

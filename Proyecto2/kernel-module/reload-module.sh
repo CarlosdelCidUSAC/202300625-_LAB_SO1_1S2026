@@ -5,7 +5,7 @@ echo "Descargando módulo anterior..."
 sudo rmmod sonda 2>/dev/null || echo "Módulo no estaba cargado"
 
 echo "Cargando nuevo módulo..."
-sudo insmod /home/carlos/Desktop/Proyecto2/kernel-module/sonda.ko
+sudo insmod /home/carlos/Desktop/Proyecto2/kernel-module/build/sonda.ko
 
 if [ $? -eq 0 ]; then
     echo "✓ Módulo recargado exitosamente"

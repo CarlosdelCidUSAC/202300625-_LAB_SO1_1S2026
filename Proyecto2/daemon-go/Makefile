@@ -2,7 +2,7 @@
 
 # Variables
 GO := go
-BINARY_NAME := daemon-so1-fase4
+BINARY_NAME := daemon-so1
 BINARY_PATH := ./cmd/daemon/main.go
 OUTPUT_DIR := ./bin
 VERSION := 1.0.0
@@ -73,11 +73,11 @@ vet: ## Ejecutar go vet
 
 docker-build: build ## Crear imagen Docker del daemon
 	@echo "Creando imagen Docker..."
-	docker build -t daemon-so1-fase4:$(VERSION) .
+	docker build -t daemon-so1:$(VERSION) .
 	@echo "✓ Imagen creada"
 
 docker-run: docker-build ## Ejecutar daemon en contenedor
 	@echo "Ejecutando daemon en contenedor..."
-	docker run -d --name daemon-fase4 daemon-so1-fase4:$(VERSION)
+	docker run -d --name daemon-fase4 daemon-so1:$(VERSION)
 
 .DEFAULT_GOAL := help
