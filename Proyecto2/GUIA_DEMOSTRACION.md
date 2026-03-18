@@ -2,7 +2,7 @@
 
 **Carnet: 202300625**
 
-## 🚀 Inicio Rápido (5 minutos)
+##  Inicio Rápido (5 minutos)
 
 ### Pre-requisitos
 ```bash
@@ -15,22 +15,22 @@ sudo /home/carlos/Desktop/Proyecto2/tests/limpiar-entorno.sh
 
 ---
 
-## 📋 Demostración Completa (Paso a Paso)
+##  Demostración Completa (Paso a Paso)
 
-### ✅ PASO 1: Verificar que todo funciona (1 minuto)
+###  PASO 1: Verificar que todo funciona (1 minuto)
 ```bash
 cd /home/carlos/Desktop/Proyecto2
 sudo ./tests/verificar-requisitos.sh
 ```
 
 **Resultado esperado:** 
-- ✅ 32/32 pruebas exitosas
-- ✅ 100% de cumplimiento
-- 📄 Reporte generado en `docs/evidencias/verificacion_*.txt`
+-  32/32 pruebas exitosas
+-  100% de cumplimiento
+-  Reporte generado en `docs/evidencias/verificacion_*.txt`
 
 ---
 
-### ✅ PASO 2: Mostrar el módulo kernel (2 minutos)
+###  PASO 2: Mostrar el módulo kernel (2 minutos)
 
 #### 2.1 Código fuente
 ```bash
@@ -79,7 +79,7 @@ PID|Nombre|VSZ|RSS|%RAM|CPU|ComandoID
 
 ---
 
-### ✅ PASO 3: Mostrar el daemon GO (3 minutos)
+###  PASO 3: Mostrar el daemon GO (3 minutos)
 
 #### 3.1 Estructura del proyecto
 ```bash
@@ -115,7 +115,7 @@ ls -lh bin/daemon-so1
 
 ---
 
-### ✅ PASO 4: Cronjob (1 minuto)
+###  PASO 4: Cronjob (1 minuto)
 
 #### 4.1 Ver script generador
 ```bash
@@ -144,7 +144,7 @@ tail -20 /var/log/proyecto2-contenedores.log
 
 ---
 
-### ✅ PASO 5: Infraestructura Docker (2 minutos)
+###  PASO 5: Infraestructura Docker (2 minutos)
 
 #### 5.1 Ver contenedores activos
 ```bash
@@ -173,7 +173,7 @@ sudo docker exec db_valkey valkey-cli GET stats:containers_deleted
 
 ---
 
-### ✅ PASO 6: Dashboard Grafana (3 minutos)
+###  PASO 6: Dashboard Grafana (3 minutos)
 
 #### 6.1 Abrir navegador
 ```bash
@@ -210,7 +210,7 @@ firefox http://localhost:3000 &
 
 ---
 
-### ✅ PASO 7: Ejecutar daemon LIVE (5 minutos)
+###  PASO 7: Ejecutar daemon LIVE (5 minutos)
 
 #### 7.1 Ejecutar daemon
 ```bash
@@ -221,7 +221,7 @@ sudo ./bin/daemon-so1
 **Observar salida en tiempo real:**
 ```
 ╔════════════════════════════════════════════╗
-║  DAEMON GESTOR DE CONTENEDORES - FASE 4   ║
+║  DAEMON GESTOR DE CONTENEDORES   ║
 ║  Proyecto 2: SO1 Carnet: 202300625        ║
 ║  Versión: 1.0.0                           ║
 ╚════════════════════════════════════════════╝
@@ -273,7 +273,7 @@ Deteniendo servicios...
 
 ---
 
-## 📊 Verificar Restricciones Clave
+##  Verificar Restricciones Clave
 
 ### Restricción 1: Mínimo 3 bajo consumo + 2 alto consumo
 ```bash
@@ -300,7 +300,7 @@ head -80 /home/carlos/Desktop/Proyecto2/daemon-go/internal/storage/valkey.go
 
 ---
 
-## 🧪 Escenarios de Prueba Sugeridos
+##  Escenarios de Prueba Sugeridos
 
 ### Escenario 1: Sistema bajo carga
 ```bash
@@ -330,28 +330,28 @@ bash /home/carlos/Desktop/Proyecto2/scripts/test-grafana.sh
 
 ---
 
-## 🎯 Puntos Clave para la Defensa
+##  Puntos Clave para la Defensa
 
 ### **Competencia Técnica (85 pts)**
 
 **Módulo Kernel (40 pts):**
-✅ Compila con Makefile  
-✅ Se carga/descarga limpiamente  
-✅ Crea `/proc/continfo_pr2_so1_202300625`  
-✅ Formato correcto: `[MEMORIA]` y `[PROCESOS]`  
-✅ Datos completos: PID, Nombre, VSZ, RSS, %RAM, CPU, ComandoID  
+ Compila con Makefile  
+ Se carga/descarga limpiamente  
+ Crea `/proc/continfo_pr2_so1_202300625`  
+ Formato correcto: `[MEMORIA]` y `[PROCESOS]`  
+ Datos completos: PID, Nombre, VSZ, RSS, %RAM, CPU, ComandoID  
 
 **Daemon GO (25 pts):**
-✅ Compila sin errores  
-✅ Lee y parsea `/proc` correctamente  
-✅ Almacena en Valkey con estructura apropiada  
-✅ Toma decisiones de eliminación basadas en reglas  
+ Compila sin errores  
+ Lee y parsea `/proc` correctamente  
+ Almacena en Valkey con estructura apropiada  
+ Toma decisiones de eliminación basadas en reglas  
 
 **Calidad de Código (20 pts):**
-✅ Código kernel comentado y estructurado  
-✅ Daemon GO modular (parser/analyzer/storage/orchestrator)  
-✅ Makefile funcional para kernel  
-✅ go.mod y estructura de paquetes correcta  
+ Código kernel comentado y estructurado  
+ Daemon GO modular (parser/analyzer/storage/orchestrator)  
+ Makefile funcional para kernel  
+ go.mod y estructura de paquetes correcta  
 
 ### **Documentación (15 pts)**
 
@@ -371,7 +371,7 @@ bash /home/carlos/Desktop/Proyecto2/scripts/test-grafana.sh
 
 ---
 
-## 📝 Checklist Pre-Demostración
+##  Checklist Pre-Demostración
 
 - [ ] Compilar módulo kernel (`make clean && make`)
 - [ ] Compilar daemon GO (`go build`)
@@ -384,7 +384,7 @@ bash /home/carlos/Desktop/Proyecto2/scripts/test-grafana.sh
 
 ---
 
-## 🆘 Comandos de Emergencia
+##  Comandos de Emergencia
 
 ### Si algo no funciona:
 ```bash

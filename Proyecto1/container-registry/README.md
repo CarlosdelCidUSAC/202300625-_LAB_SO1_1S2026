@@ -141,12 +141,3 @@ El registro Zot expone métricas en `/metrics` para integración con Prometheus.
 3. **Firewall**: Restringir acceso solo a las VMs del proyecto
 4. **Backup**: Realizar backup regular de imágenes importantes
 5. **Logs**: Monitorear logs de acceso y errores
-
-### Próximos Pasos
-
-1. Instalar Zot en vm2-registry
-2. Configurar autenticación
-3. Generar certificados SSL
-4. Configurar Docker en todas las VMs para usar el registro
-5. Crear scripts de automatización
-6. Configurar monitoreo del registro

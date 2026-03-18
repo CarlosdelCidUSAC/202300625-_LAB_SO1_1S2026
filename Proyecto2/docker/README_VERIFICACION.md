@@ -5,7 +5,7 @@
 
 ## Scripts de Verificación Creados
 
-### 1. `tests/verificar-requisitos.sh` ✅
+### 1. `tests/verificar-requisitos.sh` 
 Script completo que valida **todos los requisitos** del proyecto automáticamente.
 
 **Ejecución:**
@@ -15,17 +15,17 @@ sudo ./tests/verificar-requisitos.sh
 ```
 
 **Qué verifica:**
-- ✅ Compilación del módulo kernel (Makefile, sonda.c → sonda.ko)
-- ✅ Carga del módulo en el kernel (`insmod`)
-- ✅ Creación y formato del archivo `/proc/continfo_pr2_so1_202300625`
-- ✅ Datos de memoria (Total, Libre, Uso)
-- ✅ Procesos listados con formato correcto (`PID|Nombre|VSZ|RSS|%RAM|CPU|ComandoID`)
-- ✅ Compilación del daemon GO
-- ✅ Estructura de paquetes internos (parser, analyzer, storage, orchestrator)
-- ✅ Scripts de cronjob (install/uninstall)
-- ✅ Contenedores Docker (Grafana, Valkey)
-- ✅ Almacenamiento en Valkey (métricas de memoria, Top 5 RAM/CPU, contador de eliminados)
-- ✅ Restricciones clave (mínimos: 3 bajo consumo, 2 alto consumo)
+-  Compilación del módulo kernel (Makefile, sonda.c → sonda.ko)
+-  Carga del módulo en el kernel (`insmod`)
+-  Creación y formato del archivo `/proc/continfo_pr2_so1_202300625`
+-  Datos de memoria (Total, Libre, Uso)
+-  Procesos listados con formato correcto (`PID|Nombre|VSZ|RSS|%RAM|CPU|ComandoID`)
+-  Compilación del daemon GO
+-  Estructura de paquetes internos (parser, analyzer, storage, orchestrator)
+-  Scripts de cronjob (install/uninstall)
+-  Contenedores Docker (Grafana, Valkey)
+-  Almacenamiento en Valkey (métricas de memoria, Top 5 RAM/CPU, contador de eliminados)
+-  Restricciones clave (mínimos: 3 bajo consumo, 2 alto consumo)
 
 **Salida:** Genera reporte en `docs/evidencias/verificacion_TIMESTAMP.txt` con evidencias para el manual técnico.
 
@@ -86,15 +86,15 @@ sudo ./bin/daemon-so1
 ```
 
 **El daemon automáticamente:**
-- ✅ Levanta `docker-compose` (Grafana + Valkey)
-- ✅ Carga el módulo kernel
-- ✅ Instala el cronjob
-- ✅ Entra en loop (cada 30s):
+-  Levanta `docker-compose` (Grafana + Valkey)
+-  Carga el módulo kernel
+-  Instala el cronjob
+-  Entra en loop (cada 30s):
   - Lee `/proc/continfo_pr2_so1_202300625`
   - Parsea datos (memoria + procesos)
   - Guarda métricas en Valkey
   - Analiza y elimina contenedores según reglas
-- ✅ Al finalizar (Ctrl+C):
+-  Al finalizar (Ctrl+C):
   - Desinstala cronjob
   - Descarga módulo kernel
   - Detiene docker-compose
@@ -112,11 +112,11 @@ firefox http://localhost:3000
 ```
 
 **Dashboard muestra:**
-- 📊 RAM Total, Usada, Libre
-- 📈 Uso de RAM a lo largo del tiempo
-- 🥧 Top 5 contenedores por RAM
-- 🥧 Top 5 contenedores por CPU
-- 📊 Contenedores eliminados a lo largo del tiempo
+-  RAM Total, Usada, Libre
+-  Uso de RAM a lo largo del tiempo
+-  Top 5 contenedores por RAM
+-  Top 5 contenedores por CPU
+-  Contenedores eliminados a lo largo del tiempo
 
 ---
 
@@ -249,11 +249,11 @@ El script `verificar-requisitos.sh` genera automáticamente un reporte en:
 ```
 
 Contiene:
-- ✅ Resultado de cada prueba (PASS/FAIL)
-- 📄 Muestra del archivo `/proc`
-- 🐳 Lista de contenedores Docker activos
-- 📊 Datos almacenados en Valkey
-- 📈 Porcentaje de cumplimiento
+-  Resultado de cada prueba (PASS/FAIL)
+-  Muestra del archivo `/proc`
+-  Lista de contenedores Docker activos
+-  Datos almacenados en Valkey
+-  Porcentaje de cumplimiento
 
 **Usar este reporte como base para la sección de "Pruebas y Validación" del manual técnico.**
 

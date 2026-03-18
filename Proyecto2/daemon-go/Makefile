@@ -14,7 +14,7 @@ GOFLAGS := -v
 
 help: ## Mostrar esta ayuda
 	@echo "╔════════════════════════════════════════════╗"
-	@echo "║         DAEMON SO1 - FASE 4                ║"
+	@echo "║         DAEMON SO1                         ║"
 	@echo "║  Gestor de Contenedores en Go              ║"
 	@echo "╚════════════════════════════════════════════╝"
 	@echo ""

@@ -34,7 +34,7 @@ func main() {
 	defer log.Close()
 
 	log.Info("╔════════════════════════════════════════════╗")
-	log.Info("║  DAEMON GESTOR DE CONTENEDORES - FASE 4   ║")
+	log.Info("║  DAEMON GESTOR DE CONTENEDORES   ║")
 	log.Info("║  Proyecto 2: SO1 Carnet: 202300625        ║")
 	log.Info("║  Versión: " + VERSION + "                        ║")
 	log.Info("╚════════════════════════════════════════════╝")
