@@ -48,7 +48,8 @@ gcloud container clusters create gke-kubevirt-cluster \
   --machine-type=n2-standard-4 \
   --num-nodes=1 \
   --enable-nested-virtualization \
-  --node-labels=nested-virtualization=enabled
+  --node-labels=nested-virtualization=enabled \
+  --gateway-api=standard
 ```
 
 ### 2.3 Obtener credenciales del cluster

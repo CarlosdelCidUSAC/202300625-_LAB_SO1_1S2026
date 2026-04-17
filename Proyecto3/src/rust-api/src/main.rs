@@ -32,6 +32,11 @@ async fn health_check() -> impl IntoResponse {
     (StatusCode::OK, "OK")
 }
 
+// Endpoint raíz para health checks de Google Cloud Load Balancer
+async fn root_handler() -> impl IntoResponse {
+    (StatusCode::OK, "Rust API está funcionando")
+}
+
 // 3. Endpoint POST /reports
 async fn receive_report(
     State(state): State<Arc<AppState>>,
@@ -81,6 +86,7 @@ async fn main() {
 
     // 4. Configurar enrutamiento
     let app = Router::new()
+        .route("/", get(root_handler))
         .route("/health", get(health_check))
         .route("/reports", post(receive_report))
         .with_state(shared_state);
