@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-receiver-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-receiver
+  template:
+    metadata:
+      labels:
+        app: go-receiver
+    spec:
+      containers:
+        - name: go-receiver
+          image: gcr.io/proyecto3-202300625/go-receiver:v1
+          ports:
+            - containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "500m"

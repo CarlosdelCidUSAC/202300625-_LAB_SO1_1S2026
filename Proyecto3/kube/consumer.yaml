@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-consumer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-consumer
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-consumer
+    spec:
+      containers:
+        - name: rabbitmq-consumer
+          image: <IP_VM_ZOT>:5000/rabbitmq-consumer:v1
+          imagePullPolicy: Always
+          env:
+            - name: RABBITMQ_URL
+              value: "amqp://guest:guest@rabbitmq-service.default.svc.cluster.local:5672/"
+            - name: RABBITMQ_QUEUE
+              value: "war_reports_queue"
+            - name: RABBITMQ_PREFETCH
+              value: "25"
+            - name: VALKEY_ADDR
+              # Esto deberá apuntar a la IP/Servicio de tu VM de KubeVirt cuando la crees
+              value: "valkey-service.default.svc.cluster.local:6379"
+            - name: RETRY_SECONDS
+              value: "5"
+            - name: TIMESERIES_MAXLEN
+              value: "2000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"

@@ -1,0 +1,70 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: grafana-vm
+  labels:
+    kubevirt.io/vm: grafana-vm
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: grafana-vm
+        app: grafana
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1024M
+            cpu: 1
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+              ports:
+                - name: grafana
+                  port: 3000
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+            - name: datadisk
+              disk:
+                bus: virtio
+                serial: grafanadata
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/ubuntu:22.04
+        - name: datadisk
+          persistentVolumeClaim:
+            claimName: grafana-data-pvc
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: admin
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  shell: /bin/bash
+              package_update: true
+              packages:
+                - docker.io
+              runcmd:
+                - systemctl enable --now docker
+                - export DATA_DEV=/dev/disk/by-id/virtio-grafanadata
+                - test -b ${DATA_DEV}
+                - blkid ${DATA_DEV} || mkfs.ext4 -F ${DATA_DEV}
+                - mkdir -p /var/lib/grafana-data
+                - grep -q "virtio-grafanadata" /etc/fstab || echo "${DATA_DEV} /var/lib/grafana-data ext4 defaults,nofail 0 2" >> /etc/fstab
+                - mount -a
+                - chmod 777 /var/lib/grafana-data
+                - docker rm -f grafana-server || true
+                # Iniciar Grafana con datasource Redis para Valkey
+                - docker run -d --name grafana-server -p 3000:3000 --restart unless-stopped -e "GF_INSTALL_PLUGINS=redis-datasource" -e "GF_SERVER_HTTP_PORT=3000" -v /var/lib/grafana-data:/var/lib/grafana grafana/grafana:latest

@@ -14,7 +14,10 @@ spec:
     spec:
       containers:
         - name: rust-api
-          image: gcr.io/proyecto3-202300625/rust-api:v1
+          image: gcr.io/proyecto3-202300625/rust-api:v2
+          env:
+            - name: GO_SERVICE_URL
+              value: http://go-client-service.default.svc.cluster.local:8081/api/reports
           ports:
             - containerPort: 8080
           readinessProbe: # Requisito del HPA y Probes [Paso anterior]

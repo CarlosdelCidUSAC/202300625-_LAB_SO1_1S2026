@@ -2,7 +2,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::get,
     Json, Router,
 };
 use chrono::{DateTime, Utc};
@@ -27,6 +27,10 @@ struct AppState {
     go_service_url: String,
 }
 
+fn is_valid_country(country: &str) -> bool {
+    matches!(country, "USA" | "RUS" | "CHN" | "ESP" | "GTM")
+}
+
 // 2. Endpoint /health para sondas de K8s y métricas de HPA
 async fn health_check() -> impl IntoResponse {
     (StatusCode::OK, "OK")
@@ -37,11 +41,24 @@ async fn root_handler() -> impl IntoResponse {
     (StatusCode::OK, "Rust API está funcionando")
 }
 
+// Health response for routed endpoints where Gateway may perform GET checks.
+async fn reports_health() -> impl IntoResponse {
+    (StatusCode::OK, "Reports endpoint ready")
+}
+
 // 3. Endpoint POST /reports
 async fn receive_report(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<MilitaryReport>,
 ) -> impl IntoResponse {
+    if !is_valid_country(payload.country.as_str()) {
+        let response_body = serde_json::json!({
+            "status": "error",
+            "message": "Invalid country. Allowed values: USA, RUS, CHN, ESP, GTM"
+        });
+        return (StatusCode::BAD_REQUEST, Json(response_body));
+    }
+
     
     // El payload ya fue validado automáticamente por Serde.
     // Ahora enviamos el JSON al Deployment de Go según la arquitectura.
@@ -88,7 +105,9 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root_handler))
         .route("/health", get(health_check))
-        .route("/reports", post(receive_report))
+        .route("/reports", get(reports_health).post(receive_report))
+        // Compatibility route if Gateway rewrite is not active in some environments.
+        .route("/grpc-202300625", get(reports_health).post(receive_report))
         .with_state(shared_state);
 
     // 5. Escuchar en 0.0.0.0:8080 para compatibilidad con contenedores en K8s

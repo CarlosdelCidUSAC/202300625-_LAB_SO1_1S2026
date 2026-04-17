@@ -143,15 +143,40 @@ Resultado esperado: pods `virt-api`, `virt-controller`, `virt-handler` y `virt-o
 
 ## Apagar y reactivar para ahorrar costos
 
-### Opcion A: Pausa parcial (mantener el clúster)
+### Opcion A: Pausa de workloads (mantener clúster y Gateway)
 
-Reduce el node pool a 0 nodos para evitar costo de VMs. El control plane del clúster sigue existiendo y puede generar costo minimo de administracion.
+Esta opcion reduce costo de CPU/RAM de aplicaciones, manteniendo infraestructura base activa.
 
 ```bash
-# Ver nombre del node pool
+# Escalar apps del proyecto a 0 replicas
+kubectl scale deployment rust-api-deployment --replicas=0
+kubectl scale deployment go-receiver-deployment --replicas=0
+
+# Verificar
+kubectl get deploy rust-api-deployment go-receiver-deployment
+kubectl get pods
+```
+
+Para reactivar workloads:
+
+```bash
+kubectl scale deployment go-receiver-deployment --replicas=1
+kubectl scale deployment rust-api-deployment --replicas=1
+
+kubectl rollout status deployment/go-receiver-deployment --timeout=240s
+kubectl rollout status deployment/rust-api-deployment --timeout=240s
+kubectl get hpa rust-api-hpa
+```
+
+### Opcion B: Pausa de nodos (mantener clúster, quitar costo de workers)
+
+Esta opcion deja el control plane pero apaga los nodos. Al volver, los workloads se recuperan desde los manifests ya aplicados.
+
+```bash
+# Ver node pool
 gcloud container node-pools list --cluster=gke-kubevirt-cluster --region=us-east1
 
-# Apagar nodos (ejemplo con default-pool)
+# Apagar nodos
 gcloud container clusters resize gke-kubevirt-cluster \
   --region=us-east1 \
   --node-pool=default-pool \
@@ -159,7 +184,7 @@ gcloud container clusters resize gke-kubevirt-cluster \
   --quiet
 ```
 
-Para reactivar:
+Para reactivar nodos:
 
 ```bash
 gcloud container clusters resize gke-kubevirt-cluster \
@@ -170,33 +195,53 @@ gcloud container clusters resize gke-kubevirt-cluster \
 
 gcloud container clusters get-credentials gke-kubevirt-cluster --region=us-east1
 kubectl get nodes
+kubectl get pods -A
+kubectl get gateway military-gateway
 ```
 
-### Opcion B: Apagado total (minimizar costos al maximo)
+### Opcion C: Apagado total (minimizar costos al maximo)
 
-Elimina el clúster completo. Para volver, hay que crearlo otra vez y reinstalar KubeVirt.
+Elimina el clúster completo. Requiere recrear GKE y re-aplicar manifests del proyecto.
 
 ```bash
-# Apagar total
 gcloud container clusters delete gke-kubevirt-cluster --region=us-east1 --quiet
 ```
 
-Para reactivar (crear desde cero):
+Para reactivar (crear desde cero y levantar lo implementado):
 
 ```bash
+# 1) Crear cluster
 gcloud container clusters create gke-kubevirt-cluster \
   --region=us-east1 \
   --machine-type=n2-standard-4 \
   --num-nodes=1 \
   --enable-nested-virtualization \
-  --node-labels=nested-virtualization=enabled
+  --node-labels=nested-virtualization=enabled \
+  --gateway-api=standard
 
+# 2) Conectar kubectl
 gcloud container clusters get-credentials gke-kubevirt-cluster --region=us-east1
 
+# 3) (Si aplica) reinstalar KubeVirt
 export KUBEVIRT_VERSION="$(curl -fsSL https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)"
 kubectl apply -f "https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml"
 kubectl apply -f "https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-cr.yaml"
 kubectl wait --for=condition=Available kubevirt/kubevirt -n kubevirt --timeout=300s
+
+# 4) Re-aplicar lo ya implementado
+kubectl apply -f kube/gateway.yaml
+kubectl apply -f kube/go-receiver-deploy.yaml
+kubectl apply -f kube/go-receiver-service.yaml
+kubectl apply -f kube/rust-api-service.yaml
+kubectl apply -f kube/rust-api-deploy.yaml
+kubectl apply -f kube/hpa.yaml
+kubectl apply -f kube/rust-api-httproute-v2.yaml
+
+# 5) Verificar estado
+kubectl rollout status deployment/go-receiver-deployment --timeout=240s
+kubectl rollout status deployment/rust-api-deployment --timeout=240s
+kubectl get gateway military-gateway
+kubectl get httproute rust-api-httproute
 ```
 
 ## VM externa para Zot Container Registry
