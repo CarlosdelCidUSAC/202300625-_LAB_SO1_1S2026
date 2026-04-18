@@ -20,12 +20,12 @@ Componentes usados:
 
 1. `PersistentVolumeClaim` para datos (`5Gi`, `ReadWriteOnce`).
 2. `VirtualMachine` de KubeVirt con Ubuntu 22.04.
-3. `cloud-init` para instalar Docker y levantar contenedor `valkey/valkey`.
+3. `cloud-init` para instalar `redis-server` (compatible con protocolo Valkey/Redis) y configurarlo para acceso interno.
 4. `Service` interno `valkey-service` en puerto `6379`.
 
 Flujo de acceso:
 
-`Go Consumer (pod) -> valkey-service:6379 -> VM valkey-vm -> contenedor Valkey`
+`Go Consumer (pod) -> valkey-service:6379 -> VM valkey-vm -> redis-server`
 
 ---
 
@@ -56,18 +56,19 @@ La VM `valkey-vm` se configuro con:
 
 ### 3.3 Provisionamiento con cloud-init
 
-En `cloud-init` se implemento flujo idempotente:
+En `cloud-init` se implemento flujo idempotente y liviano (sin Docker en guest):
 
-1. instalar `docker.io` y habilitar servicio Docker,
+1. instalar `redis-server`,
 2. detectar disco persistente por ruta estable `/dev/disk/by-id/virtio-valkeydata`,
 3. crear filesystem solo si no existe,
-4. montar en `/var/lib/valkey-data`,
-5. registrar montaje en `/etc/fstab`,
-6. levantar contenedor Valkey con:
-   - puerto `6379:6379`
-   - volumen `/var/lib/valkey-data:/data`
-   - `--appendonly yes`
-   - `--restart unless-stopped`
+4. montar el disco en `/mnt/valkey-data` y registrar en `/etc/fstab`,
+5. migrar datos iniciales de `/var/lib/redis` solo la primera vez (marcador `.migrated`),
+6. hacer bind mount de `/mnt/valkey-data/redis` sobre `/var/lib/redis`,
+7. configurar `redis.conf` para:
+  - `bind 0.0.0.0`
+  - `protected-mode no`
+  - `appendonly yes`
+8. habilitar y reiniciar `redis-server`.
 
 ### 3.4 Service interno
 
@@ -147,6 +148,33 @@ OK
 ok
 ```
 
+### 5.4 Prueba de persistencia al recrear VM
+
+Se valido persistencia real sobre PVC con el siguiente flujo:
+
+1. escribir una clave,
+2. eliminar y recrear `valkey-vm`,
+3. volver a leer la clave.
+
+Comandos de referencia:
+
+```bash
+redis-cli -h valkey-service -p 6379 set persistence:test persist-<timestamp>
+redis-cli -h valkey-service -p 6379 get persistence:test
+
+kubectl delete vm valkey-vm --wait=true
+kubectl apply -f kube/kubevirt/valkey-vm.yaml
+kubectl wait --for=jsonpath='{.status.ready}'=true vm/valkey-vm --timeout=240s
+
+redis-cli -h valkey-service -p 6379 get persistence:test
+```
+
+Resultado observado:
+
+```text
+persistence:test se conserva despues de recrear la VM
+```
+
 ---
 
 ## 6. Integracion con Consumer
@@ -184,8 +212,8 @@ Revisar cloud-init/estado dentro de la VM:
 ```bash
 virtctl console valkey-vm
 sudo cloud-init status --long
-sudo docker ps
-sudo docker logs valkey-server --tail 100
+sudo systemctl status redis-server --no-pager
+sudo journalctl -u redis-server -n 100 --no-pager
 ```
 
 ### 7.4 Problemas con disco persistente
@@ -193,7 +221,7 @@ sudo docker logs valkey-server --tail 100
 ```bash
 lsblk
 cat /etc/fstab
-mount | rg valkey-data
+mount | rg 'valkey-data|/var/lib/redis'
 ```
 
 ---
@@ -203,7 +231,7 @@ mount | rg valkey-data
 La implementacion de Valkey en KubeVirt queda lista para el flujo del Proyecto 3:
 
 - persistencia habilitada con PVC,
-- arranque automatico de Valkey en VM,
+- arranque automatico de `redis-server` en VM,
 - exposicion interna por Service,
 - conectividad preparada para consumer y futuras consultas desde Grafana.
 

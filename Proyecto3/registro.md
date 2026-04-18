@@ -257,7 +257,6 @@ gcloud compute instances create zot-registry-vm \
   --image-family=ubuntu-2404-lts-amd64 \
   --image-project=ubuntu-os-cloud \
   --tags=zot-registry
-
 gcloud compute firewall-rules create allow-zot-registry \
   --allow tcp:5000 \
   --target-tags zot-registry
@@ -271,6 +270,77 @@ Creating firewall...⠹Created [https://www.googleapis.com/compute/v1/projects/p
 Creating firewall...done.                                                                                                              
 NAME                NETWORK  DIRECTION  PRIORITY  ALLOW     DENY  DISABLED
 allow-zot-registry  default  INGRESS    1000      tcp:5000        False
+
+## Comandos operativos rapidos - 17/04/2026
+
+### Limpiar y recrear valkey-cli en una sola linea
+
+Este comando evita el error `AlreadyExists` y valida conectividad inmediatamente:
+
+```bash
+kubectl delete pod valkey-cli --ignore-not-found && kubectl run -i --tty valkey-cli --image=valkey/valkey:latest --restart=Never --rm -- valkey-cli -h valkey-service.default.svc.cluster.local ping
+```
+
+Salida esperada:
+
+```text
+PONG
+```
+
+### Liberar puerto local 8080 y reabrir Grafana
+
+Cuando `kubectl port-forward` falla con `address already in use`:
+
+```bash
+ss -ltnp '( sport = :8080 )' && kill <PID_KUBECTL_8080>
+kubectl port-forward svc/grafana-service 8080:80
+```
+
+Verificacion esperada:
+
+```text
+Forwarding from 127.0.0.1:8080 -> 3000
+Forwarding from [::1]:8080 -> 3000
+```
+
+### Fix aplicado: Grafana en KubeVirt (17/04/2026)
+
+Problema observado:
+
+- `kubectl port-forward svc/grafana-service 8080:80` iniciaba, pero al conectar devolvia `connection refused` o `lost connection to pod`.
+
+Causa raiz:
+
+- El `cloud-init` original de `grafana-vm` instalaba Docker y levantaba Grafana en contenedor, pero la instalacion fallaba por espacio en disco (`No space left on device`).
+- El bootstrap de Grafana no completaba y no quedaba proceso escuchando en `3000`.
+
+Correccion aplicada:
+
+- Migracion a instalacion nativa de `grafana` (sin Docker en guest).
+- Uso de `Secret` para cloud-init por limite de tamano de `userData` inline.
+- Montaje temprano del disco persistente y uso de ese disco para cache/paths de Grafana durante instalacion y ejecucion.
+
+Manifiestos actualizados:
+
+- `kube/kubevirt/grafana-vm.yaml`
+- `kube/kubevirt/grafana-cloudinit-secret.yaml`
+
+Validacion final:
+
+```bash
+kubectl port-forward svc/grafana-service 8080:80
+curl -sS -m 5 http://127.0.0.1:8080/api/health
+```
+
+Salida valida observada:
+
+```json
+{
+  "database": "ok",
+  "version": "13.0.1",
+  "commit": "a100054f"
+}
+```
 
 ### Acceder a la VM
 
@@ -403,3 +473,9 @@ gcloud compute instances delete zot-registry-vm --zone=us-east1-b --quiet
 Al recrearla, vuelve a ejecutar la seccion de instalacion de Docker y despliegue de Zot.
 
 Si planeas que GKE tire imágenes desde esta VM, luego hay que confiar el certificado en los nodos o usar una CA válida.
+
+
+
+kubectl patch vm grafana-vm --type=merge -p '{"spec":{"running":true}}'
+kubectl patch vm valkey-vm --type=merge -p '{"spec":{"running":true}}'
+gcloud compute instances start zot-registry-vm --zone=us-east1-b

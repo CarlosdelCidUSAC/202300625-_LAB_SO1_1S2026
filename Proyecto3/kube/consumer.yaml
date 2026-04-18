@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: rabbitmq-consumer
-          image: <IP_VM_ZOT>:5000/rabbitmq-consumer:v1
+          image: gcr.io/proyecto3-202300625/rabbitmq-consumer:v1
           imagePullPolicy: Always
           env:
             - name: RABBITMQ_URL
