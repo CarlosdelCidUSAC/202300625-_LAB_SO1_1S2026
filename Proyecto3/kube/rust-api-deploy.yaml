@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: rust-api
-          image: 35.237.182.41:5000/rust-api:v2
+          image: gcr.io/proyecto3-202300625/rust-api:v2
           env:
             - name: GO_SERVICE_URL
               value: http://go-client-service.default.svc.cluster.local:8081/api/reports

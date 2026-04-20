@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
         - name: go-server
-          image: 35.237.182.41:5000/go-server:v1
+          image: gcr.io/proyecto3-202300625/go-server:v1
           ports:
             - containerPort: 50051
             - containerPort: 8082
@@ -94,7 +94,7 @@ spec:
     spec:
       containers:
         - name: go-server
-          image: 35.237.182.41:5000/go-server:v1
+          image: gcr.io/proyecto3-202300625/go-server:v1
           ports:
             - containerPort: 50051
             - containerPort: 8082

@@ -17,7 +17,7 @@ spec:
         resources:
           requests:
             memory: 1024M
-            cpu: 1
+            cpu: 500m
         devices:
           interfaces:
             - name: default

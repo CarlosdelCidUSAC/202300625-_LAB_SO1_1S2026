@@ -45,7 +45,7 @@ gcloud config set project Proyecto3_202300625
 ```bash
 gcloud container clusters create gke-kubevirt-cluster \
   --region=us-east1 \
-  --machine-type=n2-standard-4 \
+  --machine-type=n1-standard-2 \
   --num-nodes=1 \
   --enable-nested-virtualization \
   --node-labels=nested-virtualization=enabled \
@@ -209,7 +209,7 @@ gcloud container clusters delete gke-kubevirt-cluster --region=us-east1 --quiet
 ```bash
 gcloud container clusters create gke-kubevirt-cluster \
   --region=us-east1 \
-  --machine-type=n2-standard-4 \
+  --machine-type=n1-standard-2 \
   --num-nodes=1 \
   --enable-nested-virtualization \
   --node-labels=nested-virtualization=enabled

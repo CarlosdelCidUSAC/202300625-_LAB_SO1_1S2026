@@ -11,7 +11,7 @@ Incluye:
 1. Preparacion de herramientas y autenticacion en Google Cloud.
 2. Creacion de cluster GKE con Gateway API y virtualizacion anidada.
 3. Instalacion de KubeVirt.
-4. Build y push de imagenes en Zot.
+4. Build y push de imagenes en registro de contenedores (Zot requerido por el proyecto; GCR solo como contingencia tecnica).
 5. Despliegue del stack completo en Kubernetes.
 6. Ejecucion de pruebas funcionales y de carga.
 7. Apagado parcial y eliminacion total del proyecto en Google Cloud.
@@ -36,10 +36,11 @@ Variables recomendadas para no repetir valores:
 
 	export PROJECT_ID="proyecto3-202300625"
 	export REGION="us-east1"
-	export ZONE="us-east1-b"
+	export ZONE="us-east1-d"
 	export CLUSTER_NAME="gke-kubevirt-cluster"
 	export ZOT_VM="zot-registry-vm"
 	export ZOT_REGISTRY="35.237.182.41:5000"
+	export GCR_REGISTRY="gcr.io/${PROJECT_ID}"
 
 ## 3. Fase 0 - Google Cloud desde cero
 
@@ -56,17 +57,25 @@ Variables recomendadas para no repetir valores:
 ### 3.3 Crear cluster GKE
 
 	gcloud container clusters create "$CLUSTER_NAME" \
-	  --region="$REGION" \
-	  --machine-type=n2-standard-4 \
-	  --num-nodes=1 \
+	  --zone="$ZONE" \
+	  --machine-type=n1-standard-2 \
+	  --num-nodes=3 \
 	  --enable-nested-virtualization \
 	  --node-labels=nested-virtualization=enabled \
 	  --gateway-api=standard
 
 ### 3.4 Conectar kubectl al cluster
 
-	gcloud container clusters get-credentials "$CLUSTER_NAME" --region="$REGION"
+	gcloud container clusters get-credentials "$CLUSTER_NAME" --zone="$ZONE"
+	gcloud container clusters list --zone="$ZONE" --format="table(name,status)"
 	kubectl get nodes -o wide
+
+Validacion minima antes de seguir a Fase 1:
+
+1. El cluster debe estar en estado `RUNNING` (no `PROVISIONING`).
+2. `kubectl get nodes` debe listar nodos en `Ready`.
+3. Si `kubectl get nodes` responde `No resources found`, espera 1 a 2 minutos y repite 3.4.
+4. Si aun aparece `PROVISIONING`, espera y vuelve a ejecutar los comandos de 3.4.
 
 ## 4. Fase 1 - Instalar KubeVirt
 
@@ -93,11 +102,58 @@ Variables recomendadas para no repetir valores:
 	kubectl wait --for=condition=Available kubevirt/kubevirt -n kubevirt --timeout=300s
 	kubectl get pods -n kubevirt
 
-## 5. Fase 2 - Registro Zot externo
+### 4.3 Si KubeVirt queda con `ImagePullBackOff` en `virt-handler` o `virt-operator`
 
-Si ya tienes la VM de Zot funcional, salta esta fase.
+Este caso ocurre cuando el cluster no logra hacer pull estable desde Quay durante bootstrap.
 
-### 5.1 Crear VM Zot y firewall
+1. Confirmar el error exacto:
+
+	kubectl get pods -n kubevirt -o wide
+	kubectl describe pod -n kubevirt <pod_en_fallo>
+
+2. Publicar imagenes de KubeVirt usadas por este flujo en GCR:
+
+	gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+	for image in virt-operator virt-api virt-controller virt-handler virt-launcher virt-exportserver virt-exportproxy virt-synchronization-controller pr-helper sidecar-shim; do
+	  docker pull "quay.io/kubevirt/${image}:v1.8.2"
+	  docker tag "quay.io/kubevirt/${image}:v1.8.2" "gcr.io/${PROJECT_ID}/${image}:v1.8.2"
+	  docker push "gcr.io/${PROJECT_ID}/${image}:v1.8.2"
+	done
+
+3. Reapuntar `virt-operator` a GCR y forzar rollout:
+
+	kubectl -n kubevirt set image deployment/virt-operator virt-operator=gcr.io/${PROJECT_ID}/virt-operator:v1.8.2
+	kubectl -n kubevirt set env deployment/virt-operator VIRT_OPERATOR_IMAGE=gcr.io/${PROJECT_ID}/virt-operator:v1.8.2
+	kubectl rollout restart deployment/virt-operator -n kubevirt
+	kubectl rollout status deployment/virt-operator -n kubevirt --timeout=600s
+	kubectl wait --for=condition=Available kubevirt/kubevirt -n kubevirt --timeout=600s
+
+## 5. Fase 2 - Registro de imagenes
+
+Ruta recomendada para despliegue en GKE: usar GCR (`gcr.io/${PROJECT_ID}`) porque evita el bloqueo de confianza TLS en nodos con registros self-signed.
+
+Zot se mantiene como opcion de laboratorio.
+
+### 5.1 Registro requerido (Zot)
+
+Verificar imagenes y tags esperados en Zot:
+
+	# Reemplazar con el endpoint real de Zot cuando se valide el catalogo
+	curl -k https://$ZOT_REGISTRY/v2/_catalog
+	curl -k https://$ZOT_REGISTRY/v2/go-client/tags/list
+	curl -k https://$ZOT_REGISTRY/v2/go-server/tags/list
+	curl -k https://$ZOT_REGISTRY/v2/rabbitmq-consumer/tags/list
+	curl -k https://$ZOT_REGISTRY/v2/rust-api/tags/list
+
+Nota:
+
+1. El proyecto exige publicar y consumir las imagenes desde Zot.
+2. Si debes usar GCR de forma temporal por un bloqueo de certificados, tratalo como contingencia operativa, no como requisito del proyecto.
+3. Si publicas versiones nuevas, conserva los tags usados en manifiestos (`v1` y `v2`) o actualiza los YAML.
+
+### 5.2 Opcion alternativa - GCR temporal por contingencia
+
+### 5.2.1 Crear VM Zot y firewall
 
 	gcloud compute instances create "$ZOT_VM" \
 	  --zone="$ZONE" \
@@ -110,7 +166,7 @@ Si ya tienes la VM de Zot funcional, salta esta fase.
 	  --allow tcp:5000 \
 	  --target-tags zot-registry
 
-### 5.2 Build y push de imagenes del proyecto
+### 5.2.2 Build y push de imagenes del proyecto
 
 Desde la raiz del repo:
 
@@ -120,7 +176,8 @@ Desde la raiz del repo:
 Nota operativa registrada:
 
 1. El push usa skopeo con verificacion TLS configurable.
-2. Si GKE falla al hacer pull por certificado self-signed, debes confiar el certificado en nodos o configurar registro inseguro.
+2. Si GKE falla al hacer pull por certificado self-signed (`x509 unknown authority`), debes confiar la CA en los nodos para seguir cumpliendo el requisito del proyecto.
+3. Solo usa GCR para pruebas de contingencia cuando no sea posible estabilizar Zot.
 
 ## 6. Fase 3 - Despliegue de plataforma base en K8s
 
@@ -175,24 +232,33 @@ Verificacion:
 	kubectl get vm valkey-vm
 	kubectl get vmi
 	kubectl get svc valkey-service
+	kubectl get endpoints valkey-service
 
 ### 7.2 Grafana
 
 Aplicar en este orden para cumplir dependencia del secret:
 
-	kubectl apply -f kube/kubevirt/grafana-pvc.yaml
 	kubectl apply -f kube/kubevirt/grafana-cloudinit-secret.yaml
 	kubectl apply -f kube/kubevirt/grafana-vm.yaml
 	kubectl apply -f kube/kubevirt/grafana-service.yaml
 
+Nota:
+
+1. El manifiesto actual de `grafana-vm` usa `emptyDisk` para `datadisk` (no consume `grafana-pvc`).
+2. `kube/kubevirt/grafana-pvc.yaml` se conserva como referencia, pero no es requisito para este flujo.
+
 Verificacion:
 
 	kubectl get vm grafana-vm
+	kubectl get vmi
 	kubectl get svc grafana-service
+	kubectl get endpoints grafana-service
 
 Acceso local:
 
 	kubectl port-forward svc/grafana-service 3000:80
+
+Si `port-forward` falla, primero confirma que `grafana-service` tenga endpoints y que el VMI este en `Running`.
 
 URL: http://127.0.0.1:3000
 
@@ -223,7 +289,8 @@ Respuesta esperada:
 ### 8.2 Prueba de carga con Locust
 
 	cd locust
-	LOCUST_PATH=/grpc-202300625 locust -f locustfile.py --host=http://<GATEWAY_IP>
+	LOCUST_PATH=/grpc-202300625 locust -f locustfile.py --host=http://<GATEWAY_IP> //34.49.221.114 por el momento
+	//kubectl get gateway military-gateway -o wide  Para obtener la IP
 
 En UI de Locust (http://127.0.0.1:8089):
 
