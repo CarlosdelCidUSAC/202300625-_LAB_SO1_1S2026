@@ -105,29 +105,31 @@ Estado observado:
 - `HPA` creado (`min=1`, `max=3`, objetivo CPU 30%)
 - `HTTPRoute` aceptado por el Gateway
 
-### 5.2 Publicacion de nueva imagen y rollout
+### 5.2 Publicacion en Zot y comportamiento observado en GKE (actualizado 19/04/2026)
 
-Para incluir la correccion de salud en rutas publicas, se construyo y publico nueva imagen:
+Se construyeron y publicaron imagenes en Zot remoto (`35.237.182.41:5000`).
+
+El push con `docker push` presento errores de TLS por certificado self-signed, por lo que se uso `skopeo`:
 
 ```bash
-cd src/rust-api
-docker build -t gcr.io/proyecto3-202300625/rust-api:v2 .
-docker push gcr.io/proyecto3-202300625/rust-api:v2
-kubectl -n default set image deployment/rust-api-deployment rust-api=gcr.io/proyecto3-202300625/rust-api:v2
-kubectl rollout status deployment/rust-api-deployment --timeout=240s
+docker build -t 35.237.182.41:5000/rust-api:v2 ./src/rust-api
+skopeo copy --dest-tls-verify=false \
+	docker-daemon:35.237.182.41:5000/rust-api:v2 \
+	docker://35.237.182.41:5000/rust-api:v2
 ```
 
-Resultado del push:
+Adicionalmente se regenero el certificado de Zot con SAN para IP (`35.237.182.41`) y DNS (`zot-registry-vm`).
+
+Al intentar que los deployments en GKE consumieran imagenes desde Zot, los pods nuevos fallaron en pull con:
 
 ```text
-v2: digest: sha256:a57481dc529247e043401f261bfa204387ca540a956af0a7f55578ec50f0a131 size: 1187
+x509: certificate signed by unknown authority
 ```
 
-Resultado del rollout:
+Accion tomada para mantener disponibilidad:
 
-```text
-deployment "rust-api-deployment" successfully rolled out
-```
+- rollback de deployments a revision estable (imagenes en `gcr.io`)
+- verificacion del flujo principal por Gateway con respuesta `201`
 
 ### 5.3 Pruebas de humo publicas
 
@@ -236,21 +238,23 @@ HTTP/1.1 500 Internal Server Error
 {"message":"Failed to connect to Go service: error sending request for url (http://localhost:8081/api/reports)","status":"error"}
 ```
 
-### 8.3 Build y push de Go receptor
+### 8.3 Build y push de Go receptor (actualizado)
 
 Comando:
 
 ```bash
 cd src/go-server
-docker build -t gcr.io/proyecto3-202300625/go-receiver:v1 .
-docker push gcr.io/proyecto3-202300625/go-receiver:v1
+docker build -t 35.237.182.41:5000/go-receiver:v1 .
+skopeo copy --dest-tls-verify=false \
+	docker-daemon:35.237.182.41:5000/go-receiver:v1 \
+	docker://35.237.182.41:5000/go-receiver:v1
 ```
 
 Salida relevante:
 
 ```text
-Successfully tagged gcr.io/proyecto3-202300625/go-receiver:v1
-v1: digest: sha256:bbb79b4d36f95ec102dd003d3558ccb9d1dfc93e97907a671dec2a7975a68794 size: 968
+Successfully tagged 35.237.182.41:5000/go-receiver:v1
+copying manifest and blobs completed in Zot
 ```
 
 ### 8.4 Despliegue en Kubernetes (Go + Rust)
@@ -265,15 +269,15 @@ kubectl rollout status deployment/go-receiver-deployment --timeout=240s
 kubectl rollout status deployment/rust-api-deployment --timeout=240s
 ```
 
-Salida relevante:
+Salida relevante (estado final):
 
 ```text
-deployment.apps/go-receiver-deployment created
-service/go-receiver-service created
+deployment.apps/go-receiver-deployment configured
+service/go-receiver-service unchanged
 deployment.apps/rust-api-deployment configured
-deployment "go-receiver-deployment" successfully rolled out
-deployment "rust-api-deployment" successfully rolled out
 ```
+
+Nota: al cambiar imagenes runtime a Zot, los nuevos pods cayeron en `ImagePullBackOff` por `x509: certificate signed by unknown authority`. Se aplico rollback para restaurar estabilidad.
 
 ### 8.5 Validacion de GO_SERVICE_URL aplicado
 
@@ -310,5 +314,5 @@ Resultado: flujo validado con respuesta exitosa `201` desde el Gateway publico.
 
 ---
 
-*Ultima actualizacion: 17/04/2026*  
+*Ultima actualizacion: 19/04/2026*  
 *Proyecto: Proyecto3_202300625*

@@ -742,12 +742,22 @@ kubectl get pods -n kubevirt -o wide
 
 Si se omite este paso, varios pods caen en `ImagePullBackOff`.
 
+En este entorno, el registro Zot usa TLS con certificado self-signed. Por ello, se uso script con `skopeo` para publicar de forma consistente:
+
 ```bash
-gcloud builds submit ./src/go-client --tag gcr.io/proyecto3-202300625/go-client:v1
-gcloud builds submit ./src/go-client --tag gcr.io/proyecto3-202300625/go-receiver:v1
-gcloud builds submit ./src/go-server --tag gcr.io/proyecto3-202300625/go-server:v1
-gcloud builds submit ./src/consumer --tag gcr.io/proyecto3-202300625/rabbitmq-consumer:v1
-gcloud builds submit ./src/rust-api --tag gcr.io/proyecto3-202300625/rust-api:v2
+./docker/push-zot-images.sh 35.237.182.41:5000
+```
+
+Validar catalogo en Zot:
+
+```bash
+curl -sS -k https://35.237.182.41:5000/v2/_catalog
+```
+
+Resultado esperado:
+
+```json
+{"repositories":["go-client","go-receiver","go-server","rabbitmq-consumer","rust-api"]}
 ```
 
 ### 5) Aplicar manifiestos del proyecto
@@ -773,6 +783,11 @@ kubectl apply -f kube/kubevirt/grafana-cloudinit-secret.yaml
 kubectl apply -f kube/kubevirt/grafana-vm.yaml
 kubectl apply -f kube/kubevirt/grafana-service.yaml
 ```
+
+Nota operativa 19/04/2026:
+
+- Al forzar deployments para consumir imagenes `35.237.182.41:5000/*`, GKE fallo en pull con `x509: certificate signed by unknown authority`.
+- Se aplico rollback a revisiones estables para mantener disponibilidad mientras se resuelve confianza de CA en nodos o se instala certificado de CA publica en Zot.
 
 ### 6) Escalado recomendado de nodos para VMs + workloads
 

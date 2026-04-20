@@ -1,132 +1,116 @@
-# Ejecucion de Zot y Push de Imagen Rust (Proyecto3)
+# Ejecucion de Zot y Push de Imagenes (Proyecto3)
 
-Este documento describe la ejecucion del registro Zot en Docker, el etiquetado de la imagen local `rust-api:local`, y el push de la imagen al registro en el puerto `5000`.
-
----
-
-## 1. Contexto
-
-Se realizo el proceso desde el proyecto:
-
-```bash
-cd /home/carlos/Escritorio/Sopes1/202300625-_LAB_SO1_1S2026/Proyecto3
-```
-
-Se contaba con la imagen local previamente compilada:
-
-```bash
-docker build -t rust-api:local .
-```
+Documento actualizado con lo ejecutado en la VM externa de Zot y el estado de integracion con GKE.
 
 ---
 
-## 2. Ejecutar Zot
+## 1. Objetivo
 
-Comando solicitado:
+Publicar imagenes del proyecto en Zot remoto y validar consumo desde Kubernetes.
+
+Registro objetivo:
+
+- Host: 35.237.182.41
+- Puerto: 5000
+- URL: https://35.237.182.41:5000
+
+---
+
+## 2. Hallazgo inicial
+
+El catalogo respondia vacio:
 
 ```bash
-docker run -d -p 5000:5000 --name zot-registry ghcr.io/project-zot/zot-linux-amd64:latest
+curl -sS -k https://35.237.182.41:5000/v2/_catalog
+{"repositories":[]}
 ```
 
-Estado observado durante la ejecucion:
+---
 
-- El contenedor `zot-registry` ya existia y estaba en ejecucion.
-- Se confirmo con:
+## 3. Build y push realizados
+
+Se creo script para build/push de imagenes:
 
 ```bash
-docker ps -a --filter name=zot-registry
+./docker/push-zot-images.sh 35.237.182.41:5000
 ```
 
-Salida relevante:
+Durante la publicacion, docker push presento error TLS por certificado self-signed. Se utilizo skopeo como mecanismo de push:
+
+```bash
+skopeo copy --dest-tls-verify=false \
+	docker-daemon:35.237.182.41:5000/rust-api:v2 \
+	docker://35.237.182.41:5000/rust-api:v2
+```
+
+Misma estrategia para:
+
+- go-client:v1
+- go-server:v1
+- go-receiver:v1
+- rabbitmq-consumer:v1
+- rust-api:v2
+
+---
+
+## 4. Verificacion de catalogo
+
+Despues del push:
+
+```bash
+curl -sS -k https://35.237.182.41:5000/v2/_catalog
+```
+
+Resultado:
+
+```json
+{"repositories":["go-client","go-receiver","go-server","rabbitmq-consumer","rust-api"]}
+```
+
+---
+
+## 5. Ajuste de certificado en VM de Zot
+
+Se regenero certificado de Zot agregando Subject Alternative Name para la IP publica:
+
+- CN: zot-registry-vm
+- SAN: DNS:zot-registry-vm, IP Address:35.237.182.41
+
+Esto resolvio el error de IP sin SAN.
+
+---
+
+## 6. Resultado al consumir desde GKE
+
+Aunque el catalogo y push quedaron correctos, los pods en GKE fallaron al hacer pull desde Zot con:
 
 ```text
-NAMES
-zot-registry
+x509: certificate signed by unknown authority
 ```
+
+Accion tomada:
+
+- Se hizo rollback de deployments para restaurar estado estable.
+- El flujo principal siguio funcionando por Gateway con respuesta 201.
 
 ---
 
-## 3. Etiquetar y Subir Imagen Rust
+## 7. Estado final (19/04/2026)
 
-Comandos solicitados (para VM en GCP):
-
-```bash
-# Reemplaza <IP_VM_ZOT> por la IP de tu instancia en GCP
-docker tag rust-api:local <IP_VM_ZOT>:5000/rust-api:v1
-docker push <IP_VM_ZOT>:5000/rust-api:v1
-```
-
-Comandos ejecutados en esta sesion (registro local):
-
-```bash
-docker tag rust-api:local 127.0.0.1:5000/rust-api:v1
-docker push 127.0.0.1:5000/rust-api:v1
-```
-
-Resultado del push:
-
-```text
-The push refers to repository [127.0.0.1:5000/rust-api]
-v1: digest: sha256:2186f2866602a9c9d0b3353e578b2c025d112560e5bf77abc19d43b5abce68d1 size: 1187
-```
-
-Estado: imagen publicada correctamente en Zot con tag `v1`.
+- Zot remoto poblado con todas las imagenes del proyecto.
+- Integracion runtime GKE -> Zot pendiente por confianza de CA en nodos.
+- Sistema operativo restaurado usando revision previa estable de deployments.
 
 ---
 
-## 4. Verificaciones Rapidas
+## 8. Siguiente paso recomendado
 
-Verificar que Zot sigue activo:
+Para cumplir consumo de imagenes desde Zot en Kubernetes sin errores de pull:
 
-```bash
-docker ps --filter name=zot-registry
-```
-
-Consultar catalogo del registro:
-
-```bash
-curl http://127.0.0.1:5000/v2/_catalog
-```
-
-Consultar tags del repositorio:
-
-```bash
-curl http://127.0.0.1:5000/v2/rust-api/tags/list
-```
+1. Emitir certificado de Zot con CA publica confiable por los nodos GKE, o
+2. Configurar confianza de CA privada en los nodos (opcion mas compleja).
 
 ---
 
-## 5. Uso en GCP (Referencia)
-
-Para usar una VM externa en GCP con Zot:
-
-1. Reemplazar `127.0.0.1` por la IP externa de la VM.
-2. Asegurar apertura del puerto `5000` en firewall.
-3. Si Zot esta con TLS, usar URL `https://<IP_VM_ZOT>:5000` y configurar cliente segun certificados.
-
-Ejemplo:
-
-```bash
-docker tag rust-api:local <IP_VM_ZOT>:5000/rust-api:v1
-docker push <IP_VM_ZOT>:5000/rust-api:v1
-```
-
----
-
-## 6. Comandos Utiles
-
-```bash
-# Ver imagen local
-docker images | grep rust-api
-
-# Ver contenedor Zot
-docker ps -a --filter name=zot-registry
-
-# Reiniciar Zot
-docker restart zot-registry
-```
-
----
-
-*Ultima actualizacion: 15/04/2026*  
-*Proyecto: Proyecto3_202300625*
+Ultima actualizacion: 19/04/2026
+Proyecto: Proyecto3_202300625
