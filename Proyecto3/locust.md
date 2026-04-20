@@ -88,19 +88,19 @@ Cualquier otro codigo queda marcado como fallo en Locust.
 
 ```bash
 cd locust
-locust -f locustfile.py --host=http://34.54.104.14
+locust -f locustfile.py --host=http://34.110.235.118
 ```
 
 Si el Gateway esta expuesto por HTTPS:
 
 ```bash
-locust -f locustfile.py --host=https://34.54.104.14
+locust -f locustfile.py --host=https://34.110.235.118
 ```
 
 ### 4.2 Cambiar la ruta del Gateway
 
 ```bash
-LOCUST_PATH=/grpc-202300625 locust -f locustfile.py --host=http://34.54.104.14
+LOCUST_PATH=/grpc-202300625 locust -f locustfile.py --host=http://34.110.235.118
 ```
 
 ---

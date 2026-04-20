@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	pb "go-client/proto"
 
+	dapr "github.com/dapr/go-sdk/client"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -24,6 +26,7 @@ type MilitaryReport struct {
 
 var (
 	grpcClient   pb.WarReportServiceClient
+	daprClient   dapr.Client
 	countriesMap = map[string]pb.Countries{
 		"USA": pb.Countries_usa,
 		"RUS": pb.Countries_rus,
@@ -47,6 +50,15 @@ func main() {
 	defer conn.Close()
 	grpcClient = pb.NewWarReportServiceClient(conn)
 
+	// Inicializar Dapr Client
+	var errDapr error
+	daprClient, errDapr = dapr.NewClient()
+	if errDapr != nil {
+		log.Printf("Advertencia: No se pudo inicializar Dapr Client: %v", errDapr)
+	} else {
+		defer daprClient.Close()
+	}
+
 	// 2. Servidor REST
 	r := gin.Default()
 
@@ -57,6 +69,9 @@ func main() {
 
 	// Endpoint principal de ingesta
 	r.POST("/api/reports", handleReport)
+
+	// Nuevo Endpoint para Dapr
+	r.POST("/dapr/reports", handleDaprReport)
 
 	if err := r.Run(":8081"); err != nil {
 		log.Fatalf("no se pudo iniciar el servidor REST: %v", err)
@@ -93,4 +108,36 @@ func handleReport(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": res.Status})
+}
+
+func handleDaprReport(c *gin.Context) {
+	var report MilitaryReport
+	if err := c.ShouldBindJSON(&report); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Serializar el reporte a JSON para enviarlo a través de Dapr
+	jsonData, err := json.Marshal(report)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to serialize report"})
+		return
+	}
+
+	// Invocar al servicio de destino usando Dapr
+	// "go-server-dapr" será el dapr-app-id del Deployment 2
+	ctx := context.Background()
+	content := &dapr.DataContent{
+		ContentType: "application/json",
+		Data:        jsonData,
+	}
+
+	// Dapr se encarga de enrutar la petición al método "ReceiveDapr" del servidor
+	res, err := daprClient.InvokeMethodWithContent(ctx, "go-server-dapr", "ReceiveDapr", "post", content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "dapr_response": string(res)})
 }

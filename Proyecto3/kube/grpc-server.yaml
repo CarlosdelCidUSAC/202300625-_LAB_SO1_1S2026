@@ -30,12 +30,18 @@ spec:
       labels:
         app: go-server
         deployment: writer-2
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "go-server-dapr"
+        dapr.io/app-port: "8082"
+        dapr.io/app-protocol: "http"
     spec:
       containers:
         - name: go-server
-          image: <IP_VM_ZOT>:5000/go-server:v1
+          image: 35.237.182.41:5000/go-server:v1
           ports:
             - containerPort: 50051
+            - containerPort: 8082
           env:
             - name: RABBITMQ_URL
               value: "amqp://guest:guest@rabbitmq-service.default.svc.cluster.local:5672/"
@@ -80,12 +86,18 @@ spec:
       labels:
         app: go-server
         deployment: writer-3
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "go-server-dapr"
+        dapr.io/app-port: "8082"
+        dapr.io/app-protocol: "http"
     spec:
       containers:
         - name: go-server
-          image: <IP_VM_ZOT>:5000/go-server:v1
+          image: 35.237.182.41:5000/go-server:v1
           ports:
             - containerPort: 50051
+            - containerPort: 8082
           env:
             - name: RABBITMQ_URL
               value: "amqp://guest:guest@rabbitmq-service.default.svc.cluster.local:5672/"

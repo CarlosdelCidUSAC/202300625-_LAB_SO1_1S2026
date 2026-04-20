@@ -21,7 +21,7 @@ Componentes usados:
 
 1. `PersistentVolumeClaim` para datos de Grafana (`5Gi`, `ReadWriteOnce`).
 2. `VirtualMachine` de KubeVirt con Ubuntu 22.04.
-3. `cloud-init` para instalar Docker, montar disco persistente y levantar `grafana/grafana`.
+3. `cloud-init` para instalar Grafana nativo, montar disco persistente y levantar `grafana-server`.
 4. `Service` interno `grafana-service` (puerto `80` hacia `3000`).
 5. Provisioning automatico de datasource `Valkey` via archivo YAML.
 
@@ -58,18 +58,19 @@ La VM `grafana-vm` se configuro con:
 - `running: true`
 - etiqueta `app: grafana` para seleccion por Service
 - interfaz de red con puerto `3000` expuesto (nombre `grafana`)
-- disco de datos persistente con serial estable `grafanadata`
+- disco de datos con serial estable `grafanadata`
+- volumen `datadisk` en `emptyDisk` como fallback operativo en este cluster (capacidad zonal agotada para PVC en `us-east1-d`)
 
 ### 3.3 Provisionamiento con cloud-init
 
 En `cloud-init` se implemento flujo idempotente:
 
-1. instalar `docker.io` y habilitar servicio Docker,
+1. instalar dependencias y registrar el repositorio oficial de Grafana,
 2. detectar disco persistente por ruta estable `/dev/disk/by-id/virtio-grafanadata`,
 3. crear filesystem solo si no existe,
 4. montar en `/var/lib/grafana-data`,
 5. registrar montaje en `/etc/fstab`,
-6. recrear contenedor Grafana de forma segura,
+6. instalar Grafana nativo en la VM,
 7. instalar plugin `redis-datasource` al arranque.
 
 ### 3.4 Datasource Valkey provisionado
@@ -230,11 +231,47 @@ Revisar que URL del datasource sea:
 
 La implementacion de Grafana en KubeVirt queda lista para el flujo del Proyecto 3:
 
-- persistencia habilitada con PVC,
+- despliegue funcional en VM KubeVirt (modo operativo con `emptyDisk`),
 - arranque automatico de Grafana en VM,
 - exposicion interna por Service,
 - datasource de Valkey provisionado al inicio,
 - base preparada para crear dashboards obligatorios del proyecto.
+
+---
+
+## 9. Dashboard del Proyecto desplegado
+
+Se aprovisiono automaticamente el dashboard:
+
+- UID: `proyecto3-mumnk8s`
+- titulo: `Proyecto3 - Dashboard Militar`
+- carpeta: `Proyecto3`
+
+Acceso local (port-forward):
+
+```bash
+kubectl port-forward svc/grafana-service 3000:80
+```
+
+URL y credenciales:
+
+- URL: `http://127.0.0.1:3000`
+- usuario: `admin`
+- password: `1234`
+
+Paneles provisionados (11):
+
+1. Maximo general de aviones
+2. Minimo general de aviones
+3. Maximo general de barcos
+4. Minimo general de barcos
+5. Top paises por aviones
+6. Top paises por barcos
+7. Moda de aviones
+8. Moda de barcos
+9. Serie temporal del pais asignado (CHN) basada en registros crudos de `timeseries:CHN`
+10. Nombre del pais asignado (`CHN` para carnet `202300625`)
+11. Total de reportes del pais asignado
 
 ---
 

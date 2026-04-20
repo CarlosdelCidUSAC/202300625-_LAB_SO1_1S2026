@@ -131,12 +131,12 @@ deployment "rust-api-deployment" successfully rolled out
 
 ### 5.3 Pruebas de humo publicas
 
-IP del Gateway obtenida en estado: `34.54.104.14`
+IP del Gateway obtenida en estado: `34.110.235.118`
 
 Prueba GET de salud por ruta publica:
 
 ```bash
-curl -i http://34.54.104.14/grpc-202300625
+curl -i http://34.110.235.118/grpc-202300625
 ```
 
 Salida:
@@ -149,7 +149,7 @@ Reports endpoint ready
 Prueba POST de flujo principal:
 
 ```bash
-curl -i -X POST http://34.54.104.14/grpc-202300625 \
+curl -i -X POST http://34.110.235.118/grpc-202300625 \
 	-H 'Content-Type: application/json' \
 	-d '{"country":"ESP","warplanes_in_air":10,"warships_in_water":5,"timestamp":"2026-04-17T22:20:00Z"}'
 ```
@@ -224,7 +224,7 @@ gke_proyecto3-202300625_us-east1_gke-kubevirt-cluster
 Comando:
 
 ```bash
-curl -i -X POST http://34.54.104.14/grpc-202300625 \
+curl -i -X POST http://34.110.235.118/grpc-202300625 \
 	-H 'Content-Type: application/json' \
 	-d '{"country":"ESP","warplanes_in_air":10,"warships_in_water":5,"timestamp":"2026-04-17T22:20:00Z"}'
 ```
@@ -294,7 +294,7 @@ Salida:
 Comando:
 
 ```bash
-curl -i -X POST http://34.54.104.14/grpc-202300625 \
+curl -i -X POST http://34.110.235.118/grpc-202300625 \
 	-H 'Content-Type: application/json' \
 	-d '{"country":"ESP","warplanes_in_air":10,"warships_in_water":5,"timestamp":"2026-04-17T22:40:00Z"}'
 ```

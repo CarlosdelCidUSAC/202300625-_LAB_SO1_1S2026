@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"net/http"
 	"os"
 
 	pb "go-server/proto"
@@ -65,6 +66,31 @@ func (s *server) SendReport(ctx context.Context, req *pb.WarReportRequest) (*pb.
 	return &pb.WarReportResponse{Status: "Success"}, nil
 }
 
+// Función para manejar las peticiones Dapr
+func handleDaprReceive(w http.ResponseWriter, r *http.Request, rabbitCh *amqp.Channel, queueName string) {
+	var msg RabbitMessage
+	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Reutilizamos la lógica de RabbitMQ del servidor gRPC
+	body, _ := json.Marshal(msg)
+	err := rabbitCh.PublishWithContext(context.Background(), "", queueName, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        body,
+	})
+	if err != nil {
+		log.Printf("Error al publicar en RabbitMQ desde Dapr: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Reporte publicado vía Dapr: %s", msg.Country)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"Dapr received"}`))
+}
+
 func main() {
 	// 1. Configuración de RabbitMQ
 	rabbitURL := os.Getenv("RABBITMQ_URL")
@@ -101,7 +127,18 @@ func main() {
 		log.Fatalf("No se pudo declarar la cola: %v", err)
 	}
 
-	// 2. Configuración del Servidor gRPC
+	// 2. Levantar servidor HTTP para Dapr en un hilo separado
+	go func() {
+		http.HandleFunc("/ReceiveDapr", func(w http.ResponseWriter, r *http.Request) {
+			handleDaprReceive(w, r, ch, queueName)
+		})
+		log.Println("Servidor HTTP para Dapr escuchando en :8082")
+		if err := http.ListenAndServe(":8082", nil); err != nil {
+			log.Fatalf("Error en servidor HTTP Dapr: %v", err)
+		}
+	}()
+
+	// 3. Configuración del Servidor gRPC
 	grpcPort := os.Getenv("GRPC_PORT")
 	if grpcPort == "" {
 		grpcPort = "50051"

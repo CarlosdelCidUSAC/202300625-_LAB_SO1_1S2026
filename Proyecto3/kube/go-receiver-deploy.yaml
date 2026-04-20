@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: go-receiver
-          image: gcr.io/proyecto3-202300625/go-receiver:v1
+          image: 35.237.182.41:5000/go-receiver:v1
           ports:
             - containerPort: 8081
           readinessProbe:

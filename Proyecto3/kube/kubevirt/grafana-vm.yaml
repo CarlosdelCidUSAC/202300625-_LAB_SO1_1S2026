@@ -15,8 +15,8 @@ spec:
       domain:
         resources:
           requests:
-            memory: 1024M
-            cpu: 1
+            memory: 768M
+            cpu: 500m
         devices:
           interfaces:
             - name: default
@@ -43,8 +43,8 @@ spec:
           containerDisk:
             image: quay.io/containerdisks/ubuntu:22.04
         - name: datadisk
-          persistentVolumeClaim:
-            claimName: grafana-data-pvc
+          emptyDisk:
+            capacity: 5Gi
         - name: cloudinitdisk
           cloudInitNoCloud:
             secretRef:

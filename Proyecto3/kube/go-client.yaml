@@ -12,10 +12,15 @@ spec:
     metadata:
       labels:
         app: go-client
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "go-client-dapr"
+        dapr.io/app-port: "8081"
+        dapr.io/app-protocol: "http"
     spec:
       containers:
         - name: go-client
-          image: <IP_VM_ZOT>:5000/go-client:v1
+          image: 35.237.182.41:5000/go-client:v1
           ports:
             - containerPort: 8081
           env:

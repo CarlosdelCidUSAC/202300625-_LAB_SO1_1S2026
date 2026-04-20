@@ -21,3 +21,10 @@ spec:
       backendRefs:
         - name: rust-api-service
           port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /dapr-202300625
+      backendRefs:
+        - name: rust-api-service
+          port: 80

@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: grafana-data-pvc
 spec:
+  storageClassName: premium-rwo
   accessModes:
     - ReadWriteOnce
   resources:

@@ -24,9 +24,9 @@ API Rust escuchando en http://0.0.0.0:8080
 NAME           REFERENCE                        TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
 rust-api-hpa   Deployment/rust-api-deployment   cpu: 0%/30%   1         3         1          27m
 ➜  Proyecto3 git:(main) ✗ kubectl get gateway military-gateway
-NAME               CLASS                            ADDRESS        PROGRAMMED   AGE
-military-gateway   gke-l7-global-external-managed   34.54.104.14   True         46h
-➜  Proyecto3 git:(main) ✗ curl -X POST http://34.54.104.14/reports \
+NAME               CLASS                            ADDRESS          PROGRAMMED   AGE
+military-gateway   gke-l7-global-external-managed   34.110.235.118   True         46h
+➜  Proyecto3 git:(main) ✗ curl -X POST http://34.110.235.118/reports \
      -H "Content-Type: application/json" \
      -d '{
            "country": "ESP",
